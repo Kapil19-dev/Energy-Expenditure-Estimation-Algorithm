@@ -66,10 +66,9 @@ interventions, and the best possible prediction based on the available measureme
 	-pandas (https://pandas.pydata.org/) 
 	-NumPy (https://numpy.org/)
 	-scikit-learn (https://scikit-learn.org/stable/)
-		-Tool1.2.1 (link_to_tool) 
   
 -Google Firebase (https://firebase.google.com/) 
 	-Firebase cloud functions (https://firebase.google.com/docs/functions) 
  
 ## Project Results  
-https://logsmarter.net/#/ 
+logsmarter.net
