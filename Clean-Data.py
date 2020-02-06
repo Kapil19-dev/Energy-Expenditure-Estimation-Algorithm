@@ -4,6 +4,7 @@ Ryan Lefebvre 1/26/2020
 """
 import pandas as pd
 import math 
+import copy 
 
 #Python class object that represents  
 class Subject():
@@ -53,6 +54,12 @@ def inchesToFeetAndInches( heightInInches ):
     inches = math.floor( heightInInches % 12 )
     return str(feet)+"'"+str(inches)+"\""
 
+# measurements of energy expdentiture in dataset are separated 
+# by commas and stored as strings, this function converts them 
+# to an int 
+def parseEnergyExpenditure( energyExpenditure):
+    return int( energyExpenditure.replace(",","") )
+
 # opens raw data.csv and 'cleans' the data so it 
 # can be used for analysis to create energy expenditure 
 # estimation model. Returns a list of Subjects containing one 
@@ -78,36 +85,190 @@ def cleanData():
         rowData = row[1].values
         currentSubject = Subject( 
                 index,
-                rowData[0], 
+                upperTrim( rowData[0] ), 
                 rowData[1],
                 metersToInches( rowData[2] ),
                 kgToLbs( rowData[3] ),
                 rowData[4],
-                rowData[5], 
-                rowData[6]) 
+                parseEnergyExpenditure(rowData[5]), 
+                upperTrim( rowData[6] ) ) 
         subjects.append( currentSubject )
     return subjects
 
 #calculates basic statistics about our sample. Like min max and avg for 
-# different features. Also gives break down by gender.
+# different features. Also gives break down by gender. Does this in O(n) time.
 def calculateStats(subjects):
-    print( "NOT IMPLEMENTED YET" )
+    # gender breakdown 
+    numMale = 0
+    numFemale = 0
+    # age
+    minAge = 0
+    maxAge = 0
+    totalSampleAge = 0
+    # height
+    minHeight = 0
+    maxHeight = 0
+    totalSampleHeight = 0
+    # weight
+    minWeight = 0
+    maxWeight = 0
+    totalSampleWeight = 0
+    # BMI 
+    minBMI = 0
+    maxBMI = 0
+    totalSampleBMI = 0
+    # TDEE 
+    minTDEE = 0
+    maxTDEE = 0
+    totalSampleTDEE = 0
+    # activity level breakdwon 
+    numSedentary = 0
+    numLightlyActive = 0
+    numActive = 0
+    numVeryActive = 0
+    
+    for subject in subjects :
+        if subject.sex == 'M':
+            numMale+=1
+        else:
+            numFemale+=1
+            
+        # Age
+        if subject.age < minAge or minAge == 0:
+            minAge = subject.age
+        if subject.age > maxAge:
+            maxAge = subject.age
+        totalSampleAge += subject.age
+        
+        # Height
+        if subject.heightInches < minHeight or minHeight == 0:
+            minHeight = subject.heightInches
+        if subject.heightInches > maxHeight:
+            maxHeight = subject.heightInches
+        totalSampleHeight += subject.heightInches
+        
+        # Weight
+        if subject.weightPounds < minWeight or minWeight == 0:
+            minWeight = subject.weightPounds
+        if subject.weightPounds > maxWeight:
+            maxWeight = subject.weightPounds
+        totalSampleWeight += subject.weightPounds
+        
+        # BMI
+        if subject.bmi < minTDEE or minBMI == 0:
+            minBMI = subject.bmi
+        if subject.bmi > maxBMI:
+            maxBMI = subject.bmi
+        totalSampleBMI += subject.bmi
+        
+        # TDEE
+        if subject.tdee < minTDEE or minTDEE == 0:
+            minTDEE = subject.tdee
+        if subject.tdee > maxTDEE:
+            maxTDEE = subject.tdee
+        totalSampleTDEE += subject.tdee
+        
+        #Activity level
+        if subject.activityLevel == 'S':
+            numSedentary+=1
+        elif subject.activityLevel == "LA":
+            numLightlyActive+=1
+        elif subject.activityLevel == "A":
+            numActive+=1
+        else:
+            numVeryActive+=1;
+            
+    # output
+    numSubjects = len(subjects)
+    print("<---GENDER---> ")
+    print( "\tTotal number subjects:         " + str( numSubjects))
+    print( "\tNumber male subject:           " + str(numMale))
+    print( "\t\tPercentage male:       " +
+          str(round((numMale/numSubjects)*100,2))+"%")
+    print( "\tNumber female subject:         " + str(numFemale ))
+    print( "\t\tPercentage female:     " +
+          str(round((numFemale/numSubjects)*100,2))+"%")
+    
+    print("<---AGE---> ")
+    print( "\tMin age:                       " +  str(minAge) +" years")
+    print( "\tAvg age:                       " +  
+          str(round(totalSampleAge/numSubjects,2)) +" years")
+    print( "\tMax age:                       " +  str(maxAge) + " years")
+    
+    print("<---HEIGHT---> ")
+    print( "\tMin height:                    " +
+          inchesToFeetAndInches( minHeight))
+    print( "\tAvg height:                    " +
+          inchesToFeetAndInches(( totalSampleHeight / numSubjects  )))
+    print( "\tMax height                     " +
+          inchesToFeetAndInches( maxHeight))
+    
+    print("<---WEIGHT---> ")
+    print( "\tMin weight:                    " +  str(round(minWeight,2)) +
+          " lbs")
+    print( "\tAvg weight:                    " +  
+          str(round(totalSampleWeight/numSubjects,2)) +" lbs")
+    print( "\tMax weight:                    " +  str(round(maxWeight,2)) +
+          " lbs")
+    
+    print("<---BMI---> ")
+    print( "\tMin BMI:                       " +  str(round(minBMI,2)) )
+    print( "\tAvg BMI:                       " +  
+          str(round(totalSampleBMI/numSubjects,2)) )
+    print( "\tMax BMI:                       " +  str(round(maxBMI,2)) )
+    
+    print("<---TDEE---> ")
+    print( "\tMin TDEE:                      " +  str(round( minTDEE,2)) )
+    print( "\tAvg TDEE:                      " +  
+          str(round(totalSampleTDEE/numSubjects,2)) )
+    print( "\tMax TDEE:                      " +  str(round(maxTDEE,2)) )
+    
+    print("<---Activity Level---> ")
+    print( "\tTotal number sedentary:        " +  str( numSedentary ) )
+    print( "\t    Percentage sedentary:      " +  str(
+            round( (numSedentary / numSubjects)*100 , 2 ) ) +"%" )
+    print( "\tTotal number lightly active:   " +  str( numLightlyActive )) 
+    print( "\t    Percentage lightly active: " +  str(
+            round( (numLightlyActive / numSubjects)*100 , 2 ) ) +"%" )
+    print( "\tTotal number active:           " +  str( numActive))
+    print( "\t    Percentage active:         " +  str(
+            round( (numActive / numSubjects)*100 , 2 ) ) +"%" )
+    print( "\tTotal number very active:      " +  str( numVeryActive))
+    print( "\t    Percentage very active:    " +  str(
+            round( (numVeryActive / numSubjects)*100 , 2 ) ) +"%" )
 
+        
+    
 #############################   MAIN     ###################################     
 def main():
     subjects = cleanData()
+    male = list( filter(   lambda sub: sub.sex == "M" ,
+                          copy.deepcopy( subjects )))
+    female = list( filter( lambda sub: sub.sex == "F" ,
+                          copy.deepcopy( subjects )))
+        
     print("For list of commands '/help'")
     while( True ):
         userInput = input("(Clean-Data)>").lower().strip()
         if userInput == '/help':
-            print(" /data  => Print dataset row by row \n" + 
-                  " /stats => Basic breakdown of dataset \n" +
-                  " /quit  => End script" ) 
+            print(" /data   =>\tPrint dataset row by row \n" + 
+                  " /stats  =>\tBreakdown of all subjects \n" +
+                  " /male   =>\tBreakdown of male subjects \n" +
+                  " /female =>\tBreakdown of female subjects \n" +
+                  " /quit   =>\tEnd script" ) 
+            
         elif userInput == "/data" :
             for subject in subjects:
                 print( subject )
         elif userInput == "/stats":
+            print("Stats for all subjects: ")
             calculateStats(subjects)
+        elif userInput == "/male":
+            print("Stats for male subjects only: ")
+            calculateStats(male)
+        elif userInput == "/female":
+            print("Stats for female subjects only: ")
+            calculateStats(female)
         elif userInput == "/quit":
             print("\tTerminating Script  ")
             break
