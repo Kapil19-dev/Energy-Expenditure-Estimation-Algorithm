@@ -25,6 +25,20 @@ class Subject():
         self.tdee = tdee
         self.activityLevel = activityLevel
         self.subjNum = subjNum
+        
+    def isMale():
+        return self.sex == "M"
+    
+    def getActivityMultiplier():
+        if self.activityLevel == 'S':
+            return 1.2
+        elif self.activityLevel == "LA":
+            return 1.375
+        elif self.activityLevel == "A":
+            return 1.55
+        else:
+            return 1.725
+        
     
     def __str__(self):
         return ( "Subject Number: " + str(self.subjNum ) + "\tSex: "+
@@ -34,7 +48,7 @@ class Subject():
                 str(self.bmi) + "\tTDEE: " + str(self.tdee) + 
                 "\tActivity Level: " + str(self.activityLevel) + "\n" )
     
-    
+
 # helper method for clean data converts string to
 # uppercase and trims it allows for only one call to map 
 def upperTrim( string ):
