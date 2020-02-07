@@ -58,6 +58,10 @@ def upperTrim( string ):
 def kgToLbs( weightInKg ):
     return round( weightInKg * 2.2 , 2 )
 
+#converts a weight in lbs to a weight in kg
+def lbsToKg( weightInLbs ):
+    return round( weightInLbs / 2 , 2 )
+
 #converts a height in meters to a height in lbs
 def metersToInches( heightInMeters ):
     return round( heightInMeters * 39.3701 , 2 )
