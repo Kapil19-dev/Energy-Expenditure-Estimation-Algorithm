@@ -29,6 +29,15 @@ class Subject():
     def isMale():
         return self.sex == "M"
     
+    def getWeightKg():
+        return lbsToKg(self.weightPounds)
+    
+    def getHeightCm():
+        return inchesToCm(self.heightInches)
+    
+    def getHeightMeters():
+        return inchesToMeters( self.heightInches )
+    
     def getActivityMultiplier():
         if self.activityLevel == 'S':
             return 1.2
@@ -49,10 +58,7 @@ class Subject():
                 "\tActivity Level: " + str(self.activityLevel) + "\n" )
     
 
-# helper method for clean data converts string to
-# uppercase and trims it allows for only one call to map 
-def upperTrim( string ):
-    return string.upper().strip()
+###########################   CONVERSIONS     ###############################
 
 # converts a weight in kg to weight in lbs 
 def kgToLbs( weightInKg ):
@@ -66,11 +72,26 @@ def lbsToKg( weightInLbs ):
 def metersToInches( heightInMeters ):
     return round( heightInMeters * 39.3701 , 2 )
 
+#converts a height in inches to  a height in meters 
+def inchesToMeters( heightInInches ):
+    return round( heighInInches * 0.0254 , 2 )
+
+#converts a height in inches to cm
+def inchesToCm( heightInInches ):
+    return round( heightInInches * 2.54 , 2 )
+
 #converts a height in inches to as tring of the same height in ft and inches
 def inchesToFeetAndInches( heightInInches ):
     feet =  math.floor( heightInInches / 12 ) 
     inches = math.floor( heightInInches % 12 )
     return str(feet)+"'"+str(inches)+"\""
+
+##############################################################################
+
+# helper method for clean data converts string to
+# uppercase and trims it allows for only one call to map 
+def upperTrim( string ):
+    return string.upper().strip()
 
 # measurements of energy expdentiture in dataset are separated 
 # by commas and stored as strings, this function converts them 
