@@ -18,7 +18,7 @@ class Subject():
                    tdee,
                    activityLevel):
         self.sex = sex
-        self.age = age
+        self.age = round( age , 0 )
         self.heightInches = heightInches
         self.weightPounds = weightPounds
         self.bmi = bmi
@@ -26,19 +26,19 @@ class Subject():
         self.activityLevel = activityLevel
         self.subjNum = subjNum
         
-    def isMale():
+    def isMale(self):
         return self.sex == "M"
     
-    def getWeightKg():
+    def getWeightKg(self):
         return lbsToKg(self.weightPounds)
     
-    def getHeightCm():
+    def getHeightCm(self):
         return inchesToCm(self.heightInches)
     
-    def getHeightMeters():
+    def getHeightMeters(self):
         return inchesToMeters( self.heightInches )
     
-    def getActivityMultiplier():
+    def getActivityMultiplier(self):
         if self.activityLevel == 'S':
             return 1.2
         elif self.activityLevel == "LA":
@@ -74,7 +74,7 @@ def metersToInches( heightInMeters ):
 
 #converts a height in inches to  a height in meters 
 def inchesToMeters( heightInInches ):
-    return round( heighInInches * 0.0254 , 2 )
+    return round( heightInInches * 0.0254 , 2 )
 
 #converts a height in inches to cm
 def inchesToCm( heightInInches ):
