@@ -3,6 +3,18 @@
 Ryan Lefebvre 1/26/2020
 """
 
+class SubjectEnergyResults():
+    def __init__( self,subject):
+        self.subjectID = subject.subjNum
+        self.trueTDEE = subject.tdee
+        self.originalHarrisBenedict = getOriginalHarrisBenedict( subject )
+        self.revisedHarrisBenedict = getRevisedHarrisBenedict( subject ) 
+        self.mifflinStJeor = getMifflinStJeor(subject)
+        self.owen = getOwen(subject)
+        self.whoFaoUnu = getWhoFaoUnu(subject)
+        self.logSmarter = getLogSmarter( subject )
+
+
 ############################ POPULAR BMR EQUATIONS ###########################
 # Specifically look at equations that consider weight, height, age and gender
 # this is because our dataset does not include data on lean mass of subjects.
@@ -80,14 +92,16 @@ def getWhoFaoUnu( subject ):
 ##############################################################################
             
 #LogSmarters model of estimating TDEE 
-def logSmarterModel( subject ):
-    return 
+def getLogSmarter( subject ):
+    return 0
             
-# Returns a dictinary representation of different estimates of TDEE 
-# for a given subject. Keys are defined with the functions for the different
-# estimation models 
-def buildEnergyExpenditureDictionary( subject ):
-    return 
+# Returns a list of objects that contain different estimates of TDEE 
+# for a given subject. 
+def buildEnergyExpenditureResults( subjectList ):
+    results = []
+    for subject in subjectList:
+        results.append( SubjectEnergyResults(subject) )
+    return results
             
 # iterates through subjects and builds a list of energy expenditure 
 # dictionaries for each subject. Plots results for easy comparison between 
