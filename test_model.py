@@ -4,12 +4,10 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
-import math
-import sys
-
 
 class SubjectEnergyResults():
     def __init__( self,subject):
+        self.subject = subject
         self.subjectID = subject.subjNum
         self.trueTDEE = subject.tdee
         self.logSmarter = getLogSmarter( subject )
@@ -17,21 +15,20 @@ class SubjectEnergyResults():
         # TDEE = BMR estimate * activityLevel
         # below is a comprehensive source of all popular estimation methods
         # https://completehumanperformance.com/2013/10/08/calorie-needs/
-        self.originalHarrisBenedict = (getOriginalHarrisBenedict( subject ) *
-                                       subject.getActivityMultiplier())
-        self.revisedHarrisBenedict = (getRevisedHarrisBenedict( subject ) *
-                                      subject.getActivityMultiplier())
-        self.mifflinStJeor = (getMifflinStJeor(subject) *
-                              subject.getActivityMultiplier())
-        self.whoFaoUnu = ( getWhoFaoUnu(subject) *
-                          subject.getActivityMultiplier() )
-        self.owen = getOwen(subject) * subject.getActivityMultiplier()
+        self.originalHarrisBenedict = (getOriginalHarrisBenedict( subject ) * subject.getActivityMultiplier() )
+        self.revisedHarrisBenedict = (getRevisedHarrisBenedict( subject ) * subject.getActivityMultiplier() )
+        self.mifflinStJeor = (getMifflinStJeor(subject) * subject.getActivityMultiplier() )
+        self.whoFaoUnu = ( getWhoFaoUnu(subject) * subject.getActivityMultiplier() )
+        self.owen = getOwen(subject) * subject.getActivityMultiplier() 
 
     
     def __str__(self):
         return ( "Subject Number: " + str(self.subjectID) + "\n"
                 "\n\tTrue TDEE:                " +
                     str(round(self.trueTDEE,0) ) +
+                "\n\tLogSmarter:               " +
+                    removeTrailing(str(round(self.logSmarter,0))) +
+                "\n---------- TDEE ESTIMATES -----------" +
                 "\n\tOriginal Harris Benedict: " +
                     removeTrailing(str(round(self.originalHarrisBenedict,0)))+ 
                 "\n\tRevised Harris Benedict:  " +
@@ -42,8 +39,27 @@ class SubjectEnergyResults():
                     removeTrailing(str(round(self.owen,0))) +
                 "\n\tWHO-FAO-UNU:              " +
                     removeTrailing(str(round(self.whoFaoUnu,0))) +
+                "\n--------------------------------------------------"
+                )
+        
+    # Prints estimates of BMR instead of TDEE
+    def bmrToString(self):
+        return ( "Subject Number: " + str(self.subjectID) + "\n"
+                "\n\tTrue TDEE:                " +
+                    str(round(self.trueTDEE,0) ) +
                 "\n\tLogSmarter:               " +
                     removeTrailing(str(round(self.logSmarter,0))) +
+                "\n---------- BMR ESTIMATES -----------" + 
+                "\n\tOriginal Harris Benedict: " +
+                    removeTrailing(str(round(self.originalHarrisBenedict /  self.subject.getActivityMultiplier() ,0)))+ 
+                "\n\tRevised Harris Benedict:  " +
+                    removeTrailing(str(round(self.revisedHarrisBenedict /  self.subject.getActivityMultiplier() ,0)))+
+                "\n\tMifflin-St Jeor:          " +
+                    removeTrailing(str(round(self.mifflinStJeor /  self.subject.getActivityMultiplier(),0))) +
+                "\n\tOwen:                     " +
+                    removeTrailing(str(round(self.owen /  self.subject.getActivityMultiplier(),0))) +
+                "\n\tWHO-FAO-UNU:              " +
+                    removeTrailing(str(round(self.whoFaoUnu / self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------"
                 )
         
@@ -147,16 +163,40 @@ def buildEnergyExpenditureResults( subjectList ):
 # dictionaries for each subject. Plots results for easy comparison between 
 # accuracy of different models
 def testAndCompareModels( resultList ):
-    for subjectResult in resultList: 
-        print( subjectResult )
-    return 
+    print("**Comparison here**")
+    return
     
 #############################   MAIN     #####################################
 def main():
-    print("Hello World from Test-Model!")
-    subjectList = cleaner.cleanData()
+    subjectList = cleaner.cleanSubjectData()
     subjectResultsList = buildEnergyExpenditureResults( subjectList )
-    testAndCompareModels( subjectResultsList ) 
+    
+    print("For list of commands '/help'")
+    while( True ):
+        userInput = input("(Test-Model)>").lower().strip()
+        if userInput == '/help':
+            print("\n" +
+                  " /tdeeData        =>\tPrint tdee result dataset\n" +
+                  " /bmrData         =>\tPrint bmr result dataset\n" +
+                  " /compare         =>\tPrint TDEE estimation comparison\n" +
+                  " /quit            =>\tEnd script" ) 
+        #results
+        elif userInput == "/tdeedata" :
+            for result in subjectResultsList:
+                print( result )
+        elif userInput == "/bmrdata" :
+            for result in subjectResultsList:
+                print( result.bmrToString() )
+        elif userInput == "/compare" :
+            testAndCompareModels(subjectResultsList)
+
+        # utility   
+        elif userInput == "/quit":
+            print("\tTerminating Script  ")
+            break
+        else:
+            print("\tFor list of commands:   '/help'")
+            print("\t\tInvalid Input:  " + userInput)
     
     
 ##Tell python to run main function 
