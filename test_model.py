@@ -4,6 +4,7 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
+import math
 
 class SubjectEnergyResults():
     def __init__( self,subject):
@@ -15,10 +16,14 @@ class SubjectEnergyResults():
         # TDEE = BMR estimate * activityLevel
         # below is a comprehensive source of all popular estimation methods
         # https://completehumanperformance.com/2013/10/08/calorie-needs/
-        self.originalHarrisBenedict = (getOriginalHarrisBenedict( subject ) * subject.getActivityMultiplier() )
-        self.revisedHarrisBenedict = (getRevisedHarrisBenedict( subject ) * subject.getActivityMultiplier() )
-        self.mifflinStJeor = (getMifflinStJeor(subject) * subject.getActivityMultiplier() )
-        self.whoFaoUnu = ( getWhoFaoUnu(subject) * subject.getActivityMultiplier() )
+        self.originalHarrisBenedict = (getOriginalHarrisBenedict( subject ) *
+                                       subject.getActivityMultiplier() )
+        self.revisedHarrisBenedict = (getRevisedHarrisBenedict( subject ) *
+                                      subject.getActivityMultiplier() )
+        self.mifflinStJeor = (getMifflinStJeor(subject) *
+                              subject.getActivityMultiplier() )
+        self.whoFaoUnu = ( getWhoFaoUnu(subject) *
+                          subject.getActivityMultiplier() )
         self.owen = getOwen(subject) * subject.getActivityMultiplier() 
 
     
@@ -51,15 +56,20 @@ class SubjectEnergyResults():
                     removeTrailing(str(round(self.logSmarter,0))) +
                 "\n---------- BMR ESTIMATES -----------" + 
                 "\n\tOriginal Harris Benedict: " +
-                    removeTrailing(str(round(self.originalHarrisBenedict /  self.subject.getActivityMultiplier() ,0)))+ 
+                    removeTrailing(str(round(self.originalHarrisBenedict / 
+                                self.subject.getActivityMultiplier() ,0)))+ 
                 "\n\tRevised Harris Benedict:  " +
-                    removeTrailing(str(round(self.revisedHarrisBenedict /  self.subject.getActivityMultiplier() ,0)))+
+                    removeTrailing(str(round(self.revisedHarrisBenedict /
+                                self.subject.getActivityMultiplier() ,0)))+
                 "\n\tMifflin-St Jeor:          " +
-                    removeTrailing(str(round(self.mifflinStJeor /  self.subject.getActivityMultiplier(),0))) +
+                    removeTrailing(str(round(self.mifflinStJeor /
+                                self.subject.getActivityMultiplier(),0))) +
                 "\n\tOwen:                     " +
-                    removeTrailing(str(round(self.owen /  self.subject.getActivityMultiplier(),0))) +
+                    removeTrailing(str(round(self.owen / 
+                                self.subject.getActivityMultiplier(),0))) +
                 "\n\tWHO-FAO-UNU:              " +
-                    removeTrailing(str(round(self.whoFaoUnu / self.subject.getActivityMultiplier(),0))) +
+                    removeTrailing(str(round(self.whoFaoUnu /
+                                self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------"
                 )
         
@@ -159,11 +169,74 @@ def buildEnergyExpenditureResults( subjectList ):
         results.append( SubjectEnergyResults(subject) )
     return results
             
-# iterates through subjects and builds a list of energy expenditure 
-# dictionaries for each subject. Plots results for easy comparison between 
-# accuracy of different models
+# Calculates min max and average difference for estimation techniques from
+# true measure of TDEE for a subject 
 def testAndCompareModels( resultList ):
-    print("**Comparison here**")
+    
+    ###### ADD VARIABLES TO CALCULAE R^2
+    
+    #original HB
+    originalHarrisBenedictMin = 0
+    originalHarrisBenedictMax = 0
+    originalHarrisBenedictTotal = 0
+    originalHarrisBenedictAbsTotal = 0
+    #revised HB
+    revisedHarrisBenedictMin = 0
+    revisedHarrisBenedictMax = 0
+    revisedHarrisBenedictTotal = 0
+    revisedHarrisBenedictAbsTotal = 0
+    #MifflinStJeor
+    mifflinStJeorMin = 0
+    mifflinStJeorMax = 0
+    mifflinStJeorTotal = 0
+    mifflinStJeorAbsTotal = 0
+    #WhoFaoUnu
+    whoFaoUnuMin = 0
+    whoFaoUnuMax = 0
+    whoFaoUnuTotal = 0
+    whoFaoUnuAbsTotal = 0
+    #Owen
+    owenMin = 0
+    owenMax = 0
+    owenTotal = 0
+    owenAbsTotal = 0
+    #LogSmarter
+    logSmarterMin = 0
+    logSmarterMax = 0
+    logSmarterTotal = 0
+    logSmarterAbsTotal = 0
+    
+    for result in resultList:
+        #calculate differences observed in estimate from actual 
+        originalHarrisBenedictDifference = (
+                result.originalHarrisBenedict - result.trueTDEE )
+        revisedHarrisDifference =(
+                result.revisedHarrisBenedict - result.trueTDEE)
+        mifflinStJeorDifference = ( result.mifflinStJeor - result.trueTDEE )
+        whoFaoUnuDifference = ( result.whoFaoUnu - result.trueTDEE )
+        owenDifference = ( result.owen - result.trueTDEE )
+        
+        if (originalHarrisBenedictDifference < originalHarrisBenedictMin
+            or originalHarrisBenedictMin == 0 ):
+            originalHarrisBenedictMin = originalHarrisBenedictDifference
+        if(originalHarrisBenedictDifference > originalHarrisBenedictMax
+            or originalHarrisBenedictMax == 0):
+            originalHarrisBenedictMax = originalHarrisBenedictDifference
+        originalHarrisBenedictTotal += originalHarrisBenedictDifference
+        originalHarrisBenedictAbsTotal += abs(originalHarrisBenedictDifference)
+        
+        
+            # output
+    sampleSize = len(resultList)
+    print("<---Original Harris Benedict---> ")
+    print( "\tMin difference:                   " + str(round(originalHarrisBenedictMin,2)))
+    print( "\tMax difference:                   " + str(round(originalHarrisBenedictMax,2)))
+    print( "\tAvg difference:                   " +
+          str(round((originalHarrisBenedictTotal/sampleSize)*100,2)))
+    print( "\tAvg absolute difference:          " +
+          str(round((originalHarrisBenedictAbsTotal/sampleSize)*100,2)))
+    print( "\tR-squared:                        ")
+    
     return
     
 #############################   MAIN     #####################################
