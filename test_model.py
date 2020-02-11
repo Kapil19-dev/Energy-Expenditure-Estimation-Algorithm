@@ -84,6 +84,7 @@ class EnergyComparisonResult():
             self.total = 0
             self.absTotal = 0
             #Accumulator for MSE
+            #RMSE seems like best estimate her
             self.sumObservedPredictedDiffSquared = 0
             # total number of subjects we've added data for
             self.count = 0
@@ -114,7 +115,7 @@ class EnergyComparisonResult():
               str(round(self.absTotal/self.count,2)) +
          "\n\tMSE:                              " + 
               str(round(self.sumObservedPredictedDiffSquared/self.count,2)) +
-         "\n\tRMSE:                              " + 
+         "\n\tRMSE:                             " + 
               str(round(math.sqrt(
                       self.sumObservedPredictedDiffSquared/self.count),2)))
         
@@ -251,7 +252,6 @@ def testAndCompareModels( resultList ):
     print( owenManager )
     print( whoFaoUnuManager )
     print( logSmarterManager )
-    
     return
     
 #############################   MAIN     #####################################

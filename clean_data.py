@@ -191,6 +191,25 @@ def ridiculousWeight( weightPounds ):
 # estimation model. Returns a list of Subjects containing one 
 # Subject for each row of the dataset.
 def cleanSubjectData():
+    rawData = getRawDataAsPandas()
+    # build list of python class objects ( much easier to work with ) 
+    subjects = []
+    for index, row in enumerate( rawData.iterrows() ):
+        rowData = row[1].values
+        currentSubject = Subject( 
+                index,
+                upperTrim( rowData[0] ), 
+                rowData[1],
+                metersToInches( rowData[2] ),
+                kgToLbs( rowData[3] ),
+                rowData[4],
+                rowData[5], 
+                upperTrim( rowData[6] ) ) 
+        subjects.append( currentSubject )
+    return subjects
+
+#Opens up raw data file and returns as pandas array
+def getRawDataAsPandas():
     rawData = pd.read_csv("data/DLW_TDEE_DATA.csv")
     # only 766 rows of data but read_csv returns 1467 rows
     # drop other 701 rows to only retain headers and
@@ -205,21 +224,10 @@ def cleanSubjectData():
     rawData.columns = map( upperTrim , rawData.columns )
     #consistent with acronym for energy expenditure 
     rawData.rename( columns = {'TEE':'TDEE'} , inplace= True )
-    # build list of python class objects ( much easier to work with ) 
-    subjects = []
-    for index, row in enumerate( rawData.iterrows() ):
-        rowData = row[1].values
-        currentSubject = Subject( 
-                index,
-                upperTrim( rowData[0] ), 
-                rowData[1],
-                metersToInches( rowData[2] ),
-                kgToLbs( rowData[3] ),
-                rowData[4],
-                parseEnergyExpenditure(rowData[5]), 
-                upperTrim( rowData[6] ) ) 
-        subjects.append( currentSubject )
-    return subjects
+    #TDEE is stored as a string, change to 
+    #int representations of EE's then replace 
+    rawData['TDEE'] = list(map(parseEnergyExpenditure , rawData['TDEE']))
+    return rawData
 
 # opens raw alpha.csv and 'cleans' the data so it 
 # can be used for analysis. Returns a list of alpha users
@@ -250,7 +258,6 @@ def cleanAlphaData():
         except:
             weight = None
      
-            
         alphaUsers.append( AlphaUser(uid,
                                      email,
                                      username,
