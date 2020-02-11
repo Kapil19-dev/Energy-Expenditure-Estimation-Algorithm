@@ -4,6 +4,7 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
+import math
 
 class SubjectEnergyResults():
     def __init__( self,subject):
@@ -82,18 +83,23 @@ class EnergyComparisonResult():
             self.max = 0
             self.total = 0
             self.absTotal = 0
+            #Accumulator for MSE
+            self.sumObservedPredictedDiffSquared = 0
             # total number of subjects we've added data for
             self.count = 0
     
     #updates min max and avg for a subjects difference from their 
     # true estimate for a given technique 
-    def updateForNewSubject( self, difference ):
+    def updateForNewSubject( self, estimate , actual  ):
+        difference = actual - estimate 
         if ( difference < self.min or self.min == 0 ):
             self.min = difference
         if( difference > self.max or self.max == 0):
             self.max = difference
         self.total += difference
+        #Mean absolute error
         self.absTotal += abs(difference)
+        self.sumObservedPredictedDiffSquared = ( ( actual - estimate ) ** 2 )
         self.count+=1
     
     def __str__(self):
@@ -104,9 +110,13 @@ class EnergyComparisonResult():
              str(round(self.max,2)) +
          "\n\tAvg difference:                   " +
               str(round(self.total/self.count,2)) +
-         "\n\tAvg absolute difference:          " +
+         "\n\tMAE:                              " +
               str(round(self.absTotal/self.count,2)) +
-         "\n\tR-squared:                        " + "?" )
+         "\n\tMSE:                              " + 
+              str(round(self.sumObservedPredictedDiffSquared/self.count,2)) +
+         "\n\tRMSE:                              " + 
+              str(round(math.sqrt(
+                      self.sumObservedPredictedDiffSquared/self.count),2)))
         
 #helper method to remove trailing 0's from string
 def removeTrailing( numberAsString  ):
@@ -201,33 +211,47 @@ def buildEnergyExpenditureResults( subjectList ):
     for subject in subjectList:
         results.append( SubjectEnergyResults(subject) )
     return results            
-
-#prints the resluts of an EE technique reduces repeat coe   
-def printComparison( techniqueName, minVal , maxVal , avgVal , absAvgVal ):
-    print("<--- " + techniqueName + " ---> ")
-    print( "\tMin difference:                   " + str(round(minVal,2)))
-    print( "\tMax difference:                   " + str(round(maxVal,2)))
-    print( "\tAvg difference:                   " + str(round(avgVal,2)))
-    print( "\tAvg absolute difference:          " + str(round(absAvgVal,2)))
-    print( "\tR-squared:                        " + "?" )
-    
+  
 # Calculates min max and average difference for estimation techniques from
 # true measure of TDEE for a subject 
 def testAndCompareModels( resultList ):
     
     ###### ADD VARIABLES TO CALCULAE R^2
     originalHarrisManager = EnergyComparisonResult("Original Harris Benedict")
-
+    revisedHarrisManager = EnergyComparisonResult("Revised Harris Benedict")
+    mifflinStJeorManager = EnergyComparisonResult("Mifflin St Jeor")
+    owenManager = EnergyComparisonResult("Owen")
+    whoFaoUnuManager = EnergyComparisonResult("Who Fao Unu")
+    logSmarterManager = EnergyComparisonResult("LogSmarter")
     
     for result in resultList:
         #calculate differences observed in estimate from actual 
-        originalHarrisDifference = (
-                result.originalHarrisBenedict - result.trueTDEE)
-        originalHarrisManager.updateForNewSubject( originalHarrisDifference )
+        originalHarrisManager.updateForNewSubject( 
+                result.originalHarrisBenedict , result.trueTDEE  )
+
+        revisedHarrisManager.updateForNewSubject(  
+                result.revisedHarrisBenedict , result.trueTDEE )
+
+        mifflinStJeorManager.updateForNewSubject( 
+                result.mifflinStJeor , result.trueTDEE )
+        
+        owenManager.updateForNewSubject( 
+                result.owen , result.trueTDEE )
+        
+        whoFaoUnuManager.updateForNewSubject( 
+                result.whoFaoUnu , result.trueTDEE )
+        
+        logSmarterManager.updateForNewSubject( 
+                result.logSmarter , result.trueTDEE )
 
     # output
     print( originalHarrisManager )
-
+    print( revisedHarrisManager )
+    print( mifflinStJeorManager )
+    print( owenManager )
+    print( whoFaoUnuManager )
+    print( logSmarterManager )
+    
     return
     
 #############################   MAIN     #####################################
