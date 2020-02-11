@@ -4,7 +4,6 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
-import math
 
 class SubjectEnergyResults():
     def __init__( self,subject):
@@ -70,14 +69,48 @@ class SubjectEnergyResults():
                 "\n\tWHO-FAO-UNU:              " +
                     removeTrailing(str(round(self.whoFaoUnu /
                                 self.subject.getActivityMultiplier(),0))) +
-                "\n--------------------------------------------------"
-                )
-        
+                "\n--------------------------------------------------")
+                    
+
+# Helper class for calculating the min max and avgs of EE's
+# greatly reduces need for repeat code 
+class EnergyComparisonResult():
+    
+    def __init__( self , name ):
+            self.techniqueName = name 
+            self.min = 0
+            self.max = 0
+            self.total = 0
+            self.absTotal = 0
+            # total number of subjects we've added data for
+            self.count = 0
+    
+    #updates min max and avg for a subjects difference from their 
+    # true estimate for a given technique 
+    def updateForNewSubject( self, difference ):
+        if ( difference < self.min or self.min == 0 ):
+            self.min = difference
+        if( difference > self.max or self.max == 0):
+            self.max = difference
+        self.total += difference
+        self.absTotal += abs(difference)
+        self.count+=1
+    
+    def __str__(self):
+        return("<--- " + self.techniqueName + " ---> " +
+         "\n\tMin difference:                   " + 
+             str(round(self.min,2)) +
+         "\n\tMax difference:                   " + 
+             str(round(self.max,2)) +
+         "\n\tAvg difference:                   " +
+              str(round(self.total/self.count,2)) +
+         "\n\tAvg absolute difference:          " +
+              str(round(self.absTotal/self.count,2)) +
+         "\n\tR-squared:                        " + "?" )
         
 #helper method to remove trailing 0's from string
 def removeTrailing( numberAsString  ):
     return numberAsString.rstrip('0').rstrip('.')
-
 
 ############################ POPULAR BMR EQUATIONS ###########################
 # Specifically look at equations that consider weight, height, age and gender
@@ -167,76 +200,34 @@ def buildEnergyExpenditureResults( subjectList ):
     results = []
     for subject in subjectList:
         results.append( SubjectEnergyResults(subject) )
-    return results
-            
+    return results            
+
+#prints the resluts of an EE technique reduces repeat coe   
+def printComparison( techniqueName, minVal , maxVal , avgVal , absAvgVal ):
+    print("<--- " + techniqueName + " ---> ")
+    print( "\tMin difference:                   " + str(round(minVal,2)))
+    print( "\tMax difference:                   " + str(round(maxVal,2)))
+    print( "\tAvg difference:                   " + str(round(avgVal,2)))
+    print( "\tAvg absolute difference:          " + str(round(absAvgVal,2)))
+    print( "\tR-squared:                        " + "?" )
+    
 # Calculates min max and average difference for estimation techniques from
 # true measure of TDEE for a subject 
 def testAndCompareModels( resultList ):
     
     ###### ADD VARIABLES TO CALCULAE R^2
-    
-    #original HB
-    originalHarrisBenedictMin = 0
-    originalHarrisBenedictMax = 0
-    originalHarrisBenedictTotal = 0
-    originalHarrisBenedictAbsTotal = 0
-    #revised HB
-    revisedHarrisBenedictMin = 0
-    revisedHarrisBenedictMax = 0
-    revisedHarrisBenedictTotal = 0
-    revisedHarrisBenedictAbsTotal = 0
-    #MifflinStJeor
-    mifflinStJeorMin = 0
-    mifflinStJeorMax = 0
-    mifflinStJeorTotal = 0
-    mifflinStJeorAbsTotal = 0
-    #WhoFaoUnu
-    whoFaoUnuMin = 0
-    whoFaoUnuMax = 0
-    whoFaoUnuTotal = 0
-    whoFaoUnuAbsTotal = 0
-    #Owen
-    owenMin = 0
-    owenMax = 0
-    owenTotal = 0
-    owenAbsTotal = 0
-    #LogSmarter
-    logSmarterMin = 0
-    logSmarterMax = 0
-    logSmarterTotal = 0
-    logSmarterAbsTotal = 0
+    originalHarrisManager = EnergyComparisonResult("Original Harris Benedict")
+
     
     for result in resultList:
         #calculate differences observed in estimate from actual 
-        originalHarrisBenedictDifference = (
-                result.originalHarrisBenedict - result.trueTDEE )
-        revisedHarrisDifference =(
-                result.revisedHarrisBenedict - result.trueTDEE)
-        mifflinStJeorDifference = ( result.mifflinStJeor - result.trueTDEE )
-        whoFaoUnuDifference = ( result.whoFaoUnu - result.trueTDEE )
-        owenDifference = ( result.owen - result.trueTDEE )
-        
-        if (originalHarrisBenedictDifference < originalHarrisBenedictMin
-            or originalHarrisBenedictMin == 0 ):
-            originalHarrisBenedictMin = originalHarrisBenedictDifference
-        if(originalHarrisBenedictDifference > originalHarrisBenedictMax
-            or originalHarrisBenedictMax == 0):
-            originalHarrisBenedictMax = originalHarrisBenedictDifference
-        originalHarrisBenedictTotal += originalHarrisBenedictDifference
-        originalHarrisBenedictAbsTotal += abs(originalHarrisBenedictDifference)
-        
-        
-            # output
-    sampleSize = len(resultList)
-    print("<---Original Harris Benedict---> ")
-    print( "\tMin difference:                   " + str(round(originalHarrisBenedictMin,2)))
-    print( "\tMax difference:                   " + str(round(originalHarrisBenedictMax,2)))
-    print( "\tAvg difference:                   " +
-          str(round((originalHarrisBenedictTotal/sampleSize)*100,2)))
-    print( "\tAvg absolute difference:          " +
-          str(round((originalHarrisBenedictAbsTotal/sampleSize)*100,2)))
-    print( "\tR-squared:                        ")
-    
+        originalHarrisDifference = (
+                result.originalHarrisBenedict - result.trueTDEE)
+        originalHarrisManager.updateForNewSubject( originalHarrisDifference )
+
+    # output
+    print( originalHarrisManager )
+
     return
     
 #############################   MAIN     #####################################
