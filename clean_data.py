@@ -104,14 +104,7 @@ class Subject():
         return inchesToMeters( self.heightInches )
     
     def getActivityMultiplier(self):
-        if self.activityLevel == 'S':
-            return 1.2
-        elif self.activityLevel == "LA":
-            return 1.375
-        elif self.activityLevel == "A":
-            return 1.55
-        else:
-            return 1.725
+        return getActivityLevelNumVal(self.activityLevel)
         
     
     def __str__(self):
@@ -124,6 +117,16 @@ class Subject():
     
 
 ###########################   CONVERSIONS     ###############################
+        
+def getActivityLevelNumVal(activityLevel):
+    if activityLevel == 'S':
+        return 1.2
+    elif activityLevel == "LA":
+        return 1.375
+    elif activityLevel == "A":
+        return 1.55
+    else:
+        return 1.725
 
 # converts a weight in kg to weight in lbs 
 def kgToLbs( weightInKg ):
@@ -228,6 +231,12 @@ def getRawDataAsPandas():
     #int representations of EE's then replace 
     rawData['TDEE'] = list(map(parseEnergyExpenditure , rawData['TDEE']))
     return rawData
+
+def genderAsNumeric(gender):
+    if upperTrim(gender) == "M":
+        return 1
+    return 0
+    
 
 # opens raw alpha.csv and 'cleans' the data so it 
 # can be used for analysis. Returns a list of alpha users
