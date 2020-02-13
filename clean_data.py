@@ -117,8 +117,9 @@ class Subject():
     
 
 ###########################   CONVERSIONS     ###############################
-        
+# converts activity level from string -> num
 def getActivityLevelNumVal(activityLevel):
+    activityLevel = upperTrim(activityLevel)
     if activityLevel == 'S':
         return 1.2
     elif activityLevel == "LA":
@@ -127,6 +128,22 @@ def getActivityLevelNumVal(activityLevel):
         return 1.55
     else:
         return 1.725
+
+#converts gender from string -> num
+def genderAsNumeric(gender):
+    if upperTrim(gender) == "M":
+        return 2
+    return 1
+
+#helper method for reutrning the correct gender string of alpha users 
+def getGenderString(isMale):
+    if isMale == True:
+        return "M"
+    elif isMale == False:
+        return "F"
+    else:
+        return None 
+    
 
 # converts a weight in kg to weight in lbs 
 def kgToLbs( weightInKg ):
@@ -154,15 +171,6 @@ def inchesToFeetAndInches( heightInInches ):
     inches = math.floor( heightInInches % 12 )
     return str(feet)+"'"+str(inches)+"\""
 
-#helper method for reutrning the correct gender string of alpha users 
-def getGenderString(isMale):
-    if isMale == True:
-        return "M"
-    elif isMale == False:
-        return "F"
-    else:
-        return None 
-    
 
 ##############################################################################
 
@@ -231,12 +239,6 @@ def getRawDataAsPandas():
     #int representations of EE's then replace 
     rawData['TDEE'] = list(map(parseEnergyExpenditure , rawData['TDEE']))
     return rawData
-
-def genderAsNumeric(gender):
-    if upperTrim(gender) == "M":
-        return 1
-    return 0
-    
 
 # opens raw alpha.csv and 'cleans' the data so it 
 # can be used for analysis. Returns a list of alpha users
