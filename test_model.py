@@ -4,6 +4,7 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
+import train_model as LogSmarter
 import math
 
 class SubjectEnergyResults():
@@ -202,7 +203,12 @@ def getWhoFaoUnu( subject ):
             
 #LogSmarters model of estimating TDEE 
 def getLogSmarter( subject ):
-    return -1
+    return LogSmarter.estimate(
+            subject.heightInches,
+            subject.weightPounds,
+            subject.age,
+            subject.isMale(),
+            subject.getActivityMultiplier())
             
 
 # Returns a list of objects that contain different estimates of TDEE 
