@@ -4,12 +4,9 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
-import pandas as pd
 import matplotlib.pyplot as plt  
 from matplotlib.pyplot import pause
 from sklearn.linear_model import LinearRegression
-from sklearn import metrics, linear_model
-from sklearn.model_selection import train_test_split
 import seaborn as seabornInstance
 
 #builds the model and returns a trained linear regression object 

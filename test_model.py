@@ -6,8 +6,10 @@ Ryan Lefebvre 1/26/2020
 import clean_data as cleaner 
 import train_model as LogSmarter
 import math
+import csv 
 
 class SubjectEnergyResults():
+    #constructor
     def __init__( self,subject):
         self.subject = subject
         self.subjectID = subject.subjNum
@@ -27,7 +29,7 @@ class SubjectEnergyResults():
                           subject.getActivityMultiplier() )
         self.owen = getOwen(subject) * subject.getActivityMultiplier() 
 
-    
+    #converts to string
     def __str__(self):
         return ( "Subject Number: " + str(self.subjectID) + "\n"
                 "\n\tTrue TDEE:                " +
@@ -47,6 +49,32 @@ class SubjectEnergyResults():
                     removeTrailing(str(round(self.whoFaoUnu,0))) +
                 "\n--------------------------------------------------"
                 )
+    
+    #converts to row for exporting error to csv, displays each TDEE estimate
+    # along with absolute error for comparison 
+    def toErrorRow(self):
+        originalHarrisError =  abs(self.trueTDEE - self.originalHarrisBenedict)
+        revisedHarrisError =  abs(self.trueTDEE - self.revisedHarrisBenedict)
+        owenError = abs(self.trueTDEE - self.owen)
+        mifflinStJeorError = abs(self.trueTDEE- self.mifflinStJeor )
+        whoFaoUnuError = abs( self.trueTDEE - self.whoFaoUnu )
+        logSmarterError = abs(self.trueTDEE- self.logSmarter) 
+        return [ self.subjectID, self.trueTDEE, 
+                 round(self.originalHarrisBenedict,2),
+                 round(originalHarrisError,2),
+                 round(self.revisedHarrisBenedict,2), 
+                 round(revisedHarrisError,2),
+                 round(self.whoFaoUnu,2),
+                 round(whoFaoUnuError,2),
+                 round(self.owen,2), 
+                 round(owenError,2),
+                 round(self.mifflinStJeor,2),
+                 round(mifflinStJeorError,2),
+                 round(self.logSmarter,2), 
+                 round(logSmarterError,2),
+                 self.subject.sex , self.subject.age,
+                 self.subject.heightInches, self.subject.weightPounds,
+                 self.subject.bmi, self.subject.activityLevel]
         
     # Prints estimates of BMR instead of TDEE
     def bmrToString(self):
@@ -72,7 +100,11 @@ class SubjectEnergyResults():
                     removeTrailing(str(round(self.whoFaoUnu /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------")
-                    
+
+#converts a number to a string, rounded to dec decimal places
+#needed helper for this because I do it alot 
+def strRound( number , dec ):
+    return str( round( number , dec ) )
 
 # Helper class for calculating the min max and avgs of EE's
 # greatly reduces need for repeat code 
@@ -259,6 +291,33 @@ def testAndCompareModels( resultList ):
     print( whoFaoUnuManager )
     print( logSmarterManager )
     return
+
+
+#Exports errors from different extimation techniques to CSV
+def exportResultsAndErrors( energyResultsList ):
+    sortedResultsList = sorted( energyResultsList, key=lambda result:
+        abs(result.trueTDEE - result.logSmarter), reverse=True)
+    with open('data/error.csv' , 'w', newline='' ) as writeFile:
+        writer = csv.writer( writeFile )
+        rowList = []
+        colHeaders = [ "subjNum","TDEE",
+                       "originalHarris","originalHarrisError",
+                       "revisedHarris","revisedHarrisError",
+                       "whoFaoUnu","whoFaoUnu",
+                       "owen","owenError",      
+                       "mifflinStJeor","mifflinStJeorError",
+                       "logSmarter","logSmarterError",
+                       "Sex","Age","HeightInches","WeightPounds",
+                       "bmi", "activityLevel"]
+        rowList.append( colHeaders )
+        # Sort list with higher LS errors at top, want to find demographic  
+        # that we are overestimating for 
+        for result in sortedResultsList:
+            rowList.append(result.toErrorRow())
+         
+           
+        writer.writerows( rowList )
+        writeFile.close()
     
 #############################   MAIN     #####################################
 def main():
@@ -270,9 +329,10 @@ def main():
         userInput = input("(Test-Model)>").lower().strip()
         if userInput == '/help':
             print("\n" +
-                  " /tdeeData        =>\tPrint tdee result dataset\n" +
-                  " /bmrData         =>\tPrint bmr result dataset\n" +
-                  " /compare         =>\tPrint TDEE estimation comparison\n" +
+                  " /tdeeData        =>\tPrint tdee result dataset\n"+
+                  " /bmrData         =>\tPrint bmr result dataset\n"+
+                  " /compare         =>\tPrint TDEE estimation comparison\n"+
+                  " /export          =>\tExports results and errors\n"+
                   " /quit            =>\tEnd script" ) 
         #results
         elif userInput == "/tdeedata" :
@@ -283,6 +343,9 @@ def main():
                 print( result.bmrToString() )
         elif userInput == "/compare" :
             testAndCompareModels(subjectResultsList)
+        elif userInput == "/export" :
+            exportResultsAndErrors(subjectResultsList)
+            print("\n\tExported results and result errors to data/error.csv\n")
 
         # utility   
         elif userInput == "/quit":
