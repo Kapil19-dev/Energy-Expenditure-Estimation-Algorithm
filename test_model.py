@@ -295,8 +295,10 @@ def testAndCompareModels( resultList ):
 
 #Exports errors from different extimation techniques to CSV
 def exportResultsAndErrors( energyResultsList ):
+    
+    #### SORT BY ONES WHERE HARRIS BENEDICT BEATS LS BY MOST
     sortedResultsList = sorted( energyResultsList, key=lambda result:
-        abs(result.trueTDEE - result.logSmarter), reverse=True)
+         abs(result.trueTDEE - result.logSmarter) - abs(result.trueTDEE - result.revisedHarrisBenedict), reverse=True)
     with open('data/error.csv' , 'w', newline='' ) as writeFile:
         writer = csv.writer( writeFile )
         rowList = []
@@ -313,7 +315,11 @@ def exportResultsAndErrors( energyResultsList ):
         # Sort list with higher LS errors at top, want to find demographic  
         # that we are overestimating for 
         for result in sortedResultsList:
-            rowList.append(result.toErrorRow())
+            errorRow = result.toErrorRow()
+            # sort by rows where LSDiff > RevisedHarrisDiff
+            harrisDiffLS = abs(result.trueTDEE - result.logSmarter) - abs(result.trueTDEE - result.revisedHarrisBenedict)  
+            errorRow.append(harrisDiffLS)
+            rowList.append(errorRow)
          
            
         writer.writerows( rowList )
