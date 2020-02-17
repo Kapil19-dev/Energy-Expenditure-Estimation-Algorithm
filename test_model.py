@@ -101,10 +101,6 @@ class SubjectEnergyResults():
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------")
 
-#converts a number to a string, rounded to dec decimal places
-#needed helper for this because I do it alot 
-def strRound( number , dec ):
-    return str( round( number , dec ) )
 
 # Helper class for calculating the min max and avgs of EE's
 # greatly reduces need for repeat code 

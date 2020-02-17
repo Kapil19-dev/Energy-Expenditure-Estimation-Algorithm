@@ -114,8 +114,38 @@ class Subject():
                 str(inchesToFeetAndInches((self.heightInches))) + "\tBMI: "+
                 str(self.bmi) + "\tTDEE: " + str(self.tdee) + 
                 "\tActivity Level: " + str(self.activityLevel) + "\n" )
-    
+        
 
+#represents a grouping of subjects that are similar. Have similar,
+# height, weight age gender etc. 
+class subjectBucket():
+        def __init__( self,
+                   sexCat, 
+                   ageCat,
+                   heightCat,
+                   weightCat,
+                   bmiCat,
+                   activityLevelCat):
+            self.sexCat = sexCat
+            self.ageCat = ageCat
+            self.heightCat = heightCat
+            self.weightCat = weightCat
+            self.bmiCat = bmiCat
+            self.activityLevelCat = activityLevelCat
+            #private subject list, only accessible through addSub and getSub
+            self.subjects = []
+            
+        # how will we determin ba a and aa?
+        def fitsInBucket( subject ):
+            return False # temp for now
+        
+        #returns true on success if subject fits into bucket, false otherwise 
+        def addSubject( subject ):
+            subFits = fitsInBucket( subject )
+            if subFits:
+                self.subjects.append(subject)
+            return subFits
+        
 ###########################   CONVERSIONS     ###############################
 # converts activity level from string -> num
 def getActivityLevelNumVal(activityLevel):
@@ -171,6 +201,10 @@ def inchesToFeetAndInches( heightInInches ):
     inches = math.floor( heightInInches % 12 )
     return str(feet)+"'"+str(inches)+"\""
 
+#converts a number to a string, rounded to dec decimal places
+#needed helper for this because I do it alot 
+def strRound( number , dec ):
+    return str( round( number , dec ) )
 
 ##############################################################################
 
@@ -219,6 +253,27 @@ def cleanSubjectData():
         subjects.append( currentSubject )
     return subjects
 
+
+# Splits subjects into buckets based on known information about their 
+# height age weight and gender and activity level. End goal is to create
+# a mapping from bucket -> optimal equation 
+def splitIntoBuckets(subjectList):
+    
+    buckets = []
+    for subject in subjectList:
+        # try to insert into every bucket
+        insertWorked = False
+        for bucket in buckets:
+            insertWorked = bucket.addSubject(subject)
+            if insertWorked:
+                break
+        # if couldnt insert then create new bucket for sub and insert 
+        if not insertWorked:
+            newBucket = None ###FIX 
+            buckets.append[newBucket]
+            newBucket.addSubject(subject)
+        
+    
 #Opens up raw data file and returns as pandas array
 def getRawDataAsPandas():
     rawData = pd.read_csv("data/DLW_TDEE_DATA.csv")
@@ -400,14 +455,17 @@ def calculateStats(sample):
           str(round(totalSampleAge/reportedAges,2)) +" years")
     print( "\tMax age:                       " +  str(maxAge) + " years")
     
+    avgHeight = totalSampleHeight / reportedHeights
     print("<---HEIGHT---> ")
     print( "\tMin height:                    " +
           inchesToFeetAndInches( minHeight))
+    print("                                \t" + strRound(minHeight,2) +"in")
     print( "\tAvg height:                    " +
-          inchesToFeetAndInches(( totalSampleHeight / reportedHeights  )))
+          inchesToFeetAndInches(( avgHeight)))
+    print("                                \t" + strRound(avgHeight,2) +"in")
     print( "\tMax height                     " +
           inchesToFeetAndInches( maxHeight))
-    
+    print("                                \t" + strRound(maxHeight,2) +"in")
     print("<---WEIGHT---> ")
     print( "\tMin weight:                    " +  str(round(minWeight,2)) +
           " lbs")
