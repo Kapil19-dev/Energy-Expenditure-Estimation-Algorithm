@@ -69,7 +69,6 @@ class AlphaUser():
                      self.displayWeight() +
                  "\n-------------------------------------")
     
-
 #Python class object that represents  
 class Subject():
     def __init__( self,
@@ -118,7 +117,7 @@ class Subject():
 
 #represents a grouping of subjects that are similar. Have similar,
 # height, weight age gender etc. 
-class subjectBucket():
+class SubjectBucket():
         def __init__( self,
                    sexCat, 
                    ageCat,
@@ -145,6 +144,109 @@ class subjectBucket():
             if subFits:
                 self.subjects.append(subject)
             return subFits
+
+#Helper class for accumulating and calculating numeric subject stats
+class NumericStatManager():
+    def __init__(  self,
+                   statName, 
+                   statUnits ):
+        self.name = statName
+        self.min = 0
+        self.max = 0
+        self.total = 0
+        self.reported = 0
+        self.units = statUnits 
+        self.values = []
+        #q1,q2,q3,IQR
+        self.quartiles = ( 0,0,0,0 )
+        
+    # adds data for a stat to the manager    
+    def update( self, value ):
+        if value < self.min or self.min == 0:
+            self.min = value
+        if value > self.max or self.max == 0:
+            self.max = value
+        self.total += value
+        self.reported += 1
+        self.values.append( value )
+        self.updateQuartiles()
+        
+    #returns a tuple 
+    def updateQuartiles(self):
+        self.values.sort()
+        idxOfQ1 = round( self.reported * ( 1/4 ) )
+        idxOfQ2 = round( self.reported * ( 2/4 ) )
+        idxOfQ3 = round( self.reported * ( 3/4 ) )
+        if ( ( idxOfQ1 > -1 and idxOfQ1 < self.reported ) and
+             ( idxOfQ2 > -1 and idxOfQ2 < self.reported ) and
+             ( idxOfQ3 > -1 and idxOfQ3 < self.reported ) ):
+            iqr = round( self.values[idxOfQ3] - self.values[idxOfQ1] )
+            self.quartiles = (self.values[idxOfQ1], #Q1
+                              self.values[idxOfQ2], #Q2
+                              self.values[idxOfQ3], #Q3
+                              iqr)
+            
+    #returns which bucket a value falls into
+    # val <= q1 is low
+    # q1 < val < q3 is avg 
+    # val >= q3 is high
+    def getBucketForValue(val):
+        bucket = ""
+        if val <= quartiles[0]:
+            bucket = "low"
+        elif q1 < val and val < q3:
+            bucket = "avg"
+        elif val >= q3:
+            bucket =  "high"
+        return bucket
+                    
+    def __str__(self):
+        return("<---"+self.name+"---> " +
+         "\n\tMin "+self.name+":                 " +
+              str(round(self.min,2)) + " " + self.units +
+         "\n\tAvg " +self.name+":                 " +
+              str(round(self.total/self.reported,2)) + " " + self.units +
+         "\n\tMax " +self.name+":                 " +
+              str(round(self.max,2)) + " " + self.units +
+          "\n\tQ1:                          " + str(self.quartiles[0])  +
+          "\n\tQ2:                          " + str(self.quartiles[1])  +
+          "\n\tQ3:                          " + str(self.quartiles[2])  +
+          "\n\tIQR:                         " + str(self.quartiles[3]))
+    #true if empty
+    def isEmpty(self):
+        return self.reported == 0 
+    
+#Helper class for accumulating and calculating catagorical subject stats
+class CatagoricalStatManager():
+    def __init__(  self,
+                   statName ):
+        self.name = statName
+        # keeps track of occurences of each catagory in the dataset
+        self.catagoryCounts = {}
+        
+        self.reported = 0
+        
+    #updates count of category that value is in and num of reports
+    def update( self, value ):
+        if not value in self.catagoryCounts.keys():
+            self.catagoryCounts[value] = 0
+        self.catagoryCounts[value] += 1
+        self.reported += 1 
+    
+    def __str__(self):
+        retStr = "<---"+self.name+"---> "
+        if self.isEmpty():
+            retStr += "\n NO STATS "
+        else:
+            for key , value in self.catagoryCounts.items():
+                retStr += ( "\n\t Total " + key +  ": " + 
+                           strRound( value, 2  ) + "\n\t\t % " + key +
+                           ": " +strRound((value/self.reported)*100,2 )+"%")
+        return retStr
+    
+    #true if empty
+    def isEmpty(self):
+        return self.reported == 0 
         
 ###########################   CONVERSIONS     ###############################
 # converts activity level from string -> num
@@ -335,173 +437,51 @@ def cleanAlphaData():
 
 #calculates basic statistics about our sample. Like min max and avg for 
 # different features. Also gives break down by gender. Does this in O(n) time.
-def calculateStats(sample):
-    # gender breakdown 
-    numMale = 0
-    numFemale = 0
-    reportedGenders = 0
+# also returns a mapping of where min max and avg should fall per stat
+def calculateStats(sample , shouldPrint ):
+    # catagorical 
+    genderStatManager = CatagoricalStatManager("SEX")
+    palcatStatManager = CatagoricalStatManager("PALCAT")
+    # stat manager
+    ageStatManager = NumericStatManager("Age","years")
+    heightStatManager = NumericStatManager("Height","in")
+    weightStatManager = NumericStatManager("Weight","lbs")    
+    bmiStatManager = NumericStatManager( "BMI" ,"kg/m(^2)" )
+    tdeeStatManager = NumericStatManager( "TDEE","kcal" )
     
-    # age
-    minAge = 0
-    maxAge = 0
-    totalSampleAge = 0
-    reportedAges = 0
-    # height
-    minHeight = 0
-    maxHeight = 0
-    totalSampleHeight = 0
-    reportedHeights = 0
-    
-    # weight
-    minWeight = 0
-    maxWeight = 0
-    totalSampleWeight = 0
-    reportedWeights = 0
-    
-    # BMI 
-    minBMI = 0
-    maxBMI = 0
-    totalSampleBMI = 0
-    
-    # TDEE 
-    minTDEE = 0
-    maxTDEE = 0
-    totalSampleTDEE = 0
-    
-    # activity level breakdwon 
-    numSedentary = 0
-    numLightlyActive = 0
-    numActive = 0
-    numVeryActive = 0
-    
-    for person in sample :
-        
+    for person in sample:
         if not person.sex == None:
-            if person.sex == 'M':
-                numMale+=1
-            else:
-                numFemale+=1
-            reportedGenders+=1
-            
-        # Age
+            genderStatManager.update(person.sex)
         if not person.age == None:
-            if person.age < minAge or minAge == 0:
-                minAge = person.age
-            if person.age > maxAge:
-                maxAge = person.age
-            totalSampleAge += person.age
-            reportedAges+=1
-        
-        # Height
+            ageStatManager.update(person.age)
         if not person.heightInches == None:
-            if person.heightInches < minHeight or minHeight == 0:
-                minHeight = person.heightInches
-            if (person.heightInches > maxHeight and 
-                not ridiculousHeight(person.heightInches)):
-                maxHeight = person.heightInches
-            totalSampleHeight += person.heightInches
-            reportedHeights+=1
-        
-        # Weight
+            heightStatManager.update(person.heightInches )
         if not person.weightPounds == None:
-            if person.weightPounds < minWeight or minWeight == 0:
-                minWeight = person.weightPounds
-            if( person.weightPounds > maxWeight and
-               not ridiculousWeight(person.weightPounds)):
-                maxWeight = person.weightPounds
-            totalSampleWeight += person.weightPounds
-            reportedWeights+=1
-        
-        # Only 'subjects' have these properties
+            weightStatManager.update(person.weightPounds)
         if not person.isAlpha:
-            # BMI
-            if person.bmi < minTDEE or minBMI == 0:
-                minBMI = person.bmi
-            if person.bmi > maxBMI:
-                maxBMI = person.bmi
-            totalSampleBMI += person.bmi
-        
-            # TDEE
-            if person.tdee < minTDEE or minTDEE == 0:
-                minTDEE = person.tdee
-            if person.tdee > maxTDEE:
-                maxTDEE = person.tdee
-            totalSampleTDEE += person.tdee
-        
-            #Activity level
-            if person.activityLevel == 'S':
-                numSedentary+=1
-            elif person.activityLevel == "LA":
-                numLightlyActive+=1
-            elif person.activityLevel == "A":
-                numActive+=1
-            else:
-                numVeryActive+=1;
+            bmiStatManager.update( person.bmi )
+            tdeeStatManager.update( person.tdee )
+            palcatStatManager.update( person.activityLevel )
             
     # output
-    sampleSize = len(sample)
-    print("<---GENDER---> ")
-    print( "\tSample size:                   " + str( sampleSize))
-    print( "\tNumber male:                   " + str(numMale))
-    print( "\t\tPercentage male:       " +
-          str(round((numMale/reportedGenders)*100,2))+"%")
-    print( "\tNumber female:                 " + str(numFemale ))
-    print( "\t\tPercentage female:     " +
-          str(round((numFemale/reportedGenders)*100,2))+"%")
-    
-    print("<---AGE---> ")
-    print( "\tMin age:                       " +  str(minAge) +" years")
-    print( "\tAvg age:                       " +  
-          str(round(totalSampleAge/reportedAges,2)) +" years")
-    print( "\tMax age:                       " +  str(maxAge) + " years")
-    
-    avgHeight = totalSampleHeight / reportedHeights
-    print("<---HEIGHT---> ")
-    print( "\tMin height:                    " +
-          inchesToFeetAndInches( minHeight))
-    print("                                \t" + strRound(minHeight,2) +"in")
-    print( "\tAvg height:                    " +
-          inchesToFeetAndInches(( avgHeight)))
-    print("                                \t" + strRound(avgHeight,2) +"in")
-    print( "\tMax height                     " +
-          inchesToFeetAndInches( maxHeight))
-    print("                                \t" + strRound(maxHeight,2) +"in")
-    print("<---WEIGHT---> ")
-    print( "\tMin weight:                    " +  str(round(minWeight,2)) +
-          " lbs")
-    print( "\tAvg weight:                    " +  
-          str(round(totalSampleWeight/reportedWeights,2)) +" lbs")
-    print( "\tMax weight:                    " +  str(round(maxWeight,2)) +
-          " lbs")
-    
-    if not (sample[0]).isAlpha: # these stats only calculated for subjects
-        print("<---BMI---> ")
-        print( "\tMin BMI:                       " +  str(round(minBMI,2)) )
-        print( "\tAvg BMI:                       " +  
-              str(round(totalSampleBMI/sampleSize,2)) )
-        print( "\tMax BMI:                       " +  str(round(maxBMI,2)) )
-    
-        print("<---TDEE---> ")
-        print( "\tMin TDEE:                      " +  str(round( minTDEE,2)) )
-        print( "\tAvg TDEE:                      " +  
-              str(round(totalSampleTDEE/sampleSize,2)) )
-        print( "\tMax TDEE:                      " +  str(round(maxTDEE,2)) )
-    
-        print("<---Activity Level---> ")
-        print( "\tTotal number sedentary:        " +  str( numSedentary ) )
-        print( "\t    Percentage sedentary:      " +  str(
-                round( (numSedentary / sampleSize )*100 , 2 ) ) +"%" )
-        print( "\tTotal number lightly active:   " +  str( numLightlyActive )) 
-        print( "\t    Percentage lightly active: " +  str(
-                round( (numLightlyActive / sampleSize )*100 , 2 ) ) +"%" )
-        print( "\tTotal number active:           " +  str( numActive))
-        print( "\t    Percentage active:         " +  str(
-                round( (numActive / sampleSize )*100 , 2 ) ) +"%" )
-        print( "\tTotal number very active:      " +  str( numVeryActive))
-        print( "\t    Percentage very active:    " +  str(
-                round( (numVeryActive / sampleSize )*100 , 2 ) ) +"%" )
+    if shouldPrint:
+        sampleSize = len(sample)
+        print("Sample size: " + str(sampleSize) )
+        print( genderStatManager )
+        print( ageStatManager )  
+        print( heightStatManager )
+        print( weightStatManager)      
+        if not (sample[0]).isAlpha: # these stats only calculated for subjects
+            print( bmiStatManager )
+            print( tdeeStatManager )
+            print( palcatStatManager )
 
-        
+    managers = [ genderStatManager, palcatStatManager, ageStatManager,
+                 heightStatManager, weightStatManager, bmiStatManager,
+                 tdeeStatManager ]
+    
+    # all mnon empty stat managers returned
+    return list( filter( lambda manager: not manager.isEmpty(), managers ) )
     
 #############################   MAIN     ###################################     
 def main():
@@ -537,26 +517,26 @@ def main():
                 print( subject )
         elif userInput == "/subjectstats":
             print("Stats for all subjects: ")
-            calculateStats(subjects)
+            calculateStats(subjects,True)
         elif userInput == "/malesubjects":
             print("Stats for male subjects only: ")
-            calculateStats(maleSubjects)
+            calculateStats(maleSubjects,True)
         elif userInput == "/femalesubjects":
             print("Stats for female subjects only: ")
-            calculateStats(femaleSubjects)
+            calculateStats(femaleSubjects,True)
         #alpha
         elif userInput == "/alphadata" :
             for alphaUser in alphaUsers:
                 print( alphaUser )
         elif userInput == "/alphastats":
             print("Stats for all alpha users: ")
-            calculateStats(alphaUsers)
+            calculateStats(alphaUsers,True)
         elif userInput == "/malealpha":
             print("Stats for male alpha users only: ")
-            calculateStats(maleAlphaUsers)
+            calculateStats(maleAlphaUsers,True)
         elif userInput == "/femalealpha":
             print("Stats for female apha users only: ")
-            calculateStats(femaleAlphaUsers)
+            calculateStats(femaleAlphaUsers,True)
         # utility   
         elif userInput == "/quit":
             print("\tTerminating Script  ")
