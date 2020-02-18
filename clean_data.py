@@ -114,42 +114,12 @@ class Subject():
                 str(self.bmi) + "\tTDEE: " + str(self.tdee) + 
                 "\tActivity Level: " + str(self.activityLevel) + "\n" )
         
-
-#represents a grouping of subjects that are similar. Have similar,
-# height, weight age gender etc. 
-class SubjectBucket():
-        def __init__( self,
-                   sexCat, 
-                   ageCat,
-                   heightCat,
-                   weightCat,
-                   bmiCat,
-                   activityLevelCat):
-            self.sexCat = sexCat
-            self.ageCat = ageCat
-            self.heightCat = heightCat
-            self.weightCat = weightCat
-            self.bmiCat = bmiCat
-            self.activityLevelCat = activityLevelCat
-            #private subject list, only accessible through addSub and getSub
-            self.subjects = []
-            
-        # how will we determin ba a and aa?
-        def fitsInBucket( subject ):
-            return False # temp for now
-        
-        #returns true on success if subject fits into bucket, false otherwise 
-        def addSubject( subject ):
-            subFits = fitsInBucket( subject )
-            if subFits:
-                self.subjects.append(subject)
-            return subFits
-
 #Helper class for accumulating and calculating numeric subject stats
 class NumericStatManager():
     def __init__(  self,
                    statName, 
-                   statUnits ):
+                   statUnits,
+                   subjPropertyName):
         self.name = statName
         self.min = 0
         self.max = 0
@@ -157,11 +127,13 @@ class NumericStatManager():
         self.reported = 0
         self.units = statUnits 
         self.values = []
+        self.subjPropertyName = subjPropertyName
         #q1,q2,q3,IQR
         self.quartiles = ( 0,0,0,0 )
         
     # adds data for a stat to the manager    
-    def update( self, value ):
+    def update( self, subject ):
+        value = getattr(subject,self.subjPropertyName)
         if value < self.min or self.min == 0:
             self.min = value
         if value > self.max or self.max == 0:
@@ -190,15 +162,19 @@ class NumericStatManager():
     # val <= q1 is low
     # q1 < val < q3 is avg 
     # val >= q3 is high
-    def getBucketForValue(val):
+    def getBucketForSubject(self,subj):
+        val = getattr(subj,self.subjPropertyName)
         bucket = ""
-        if val <= quartiles[0]:
+        q1 = self.quartiles[0]
+        q2 = self.quartiles[1]
+        q3 = self.quartiles[3]
+        if val <= q1:
             bucket = "low"
         elif q1 < val and val < q3:
             bucket = "avg"
         elif val >= q3:
             bucket =  "high"
-        return bucket
+        return bucket+"-"+self.name
                     
     def __str__(self):
         return("<---"+self.name+"---> " +
@@ -219,15 +195,24 @@ class NumericStatManager():
 #Helper class for accumulating and calculating catagorical subject stats
 class CatagoricalStatManager():
     def __init__(  self,
-                   statName ):
+                   statName,
+                   subjPropertyName):
         self.name = statName
         # keeps track of occurences of each catagory in the dataset
         self.catagoryCounts = {}
-        
+        self.subjPropertyName = subjPropertyName
         self.reported = 0
         
+        
+     # helper for building bucket key for subjects   
+    def getBucketForSubject(self,subject):
+        bucket = getattr(subject,self.subjPropertyName)
+        return bucket +"-"+ self.name
+        
+        
     #updates count of category that value is in and num of reports
-    def update( self, value ):
+    def update( self, subject ):
+        value = getattr(subject,self.subjPropertyName)
         if not value in self.catagoryCounts.keys():
             self.catagoryCounts[value] = 0
         self.catagoryCounts[value] += 1
@@ -355,27 +340,6 @@ def cleanSubjectData():
         subjects.append( currentSubject )
     return subjects
 
-
-# Splits subjects into buckets based on known information about their 
-# height age weight and gender and activity level. End goal is to create
-# a mapping from bucket -> optimal equation 
-def splitIntoBuckets(subjectList):
-    
-    buckets = []
-    for subject in subjectList:
-        # try to insert into every bucket
-        insertWorked = False
-        for bucket in buckets:
-            insertWorked = bucket.addSubject(subject)
-            if insertWorked:
-                break
-        # if couldnt insert then create new bucket for sub and insert 
-        if not insertWorked:
-            newBucket = None ###FIX 
-            buckets.append[newBucket]
-            newBucket.addSubject(subject)
-        
-    
 #Opens up raw data file and returns as pandas array
 def getRawDataAsPandas():
     rawData = pd.read_csv("data/DLW_TDEE_DATA.csv")
@@ -437,52 +401,57 @@ def cleanAlphaData():
 
 #calculates basic statistics about our sample. Like min max and avg for 
 # different features. Also gives break down by gender. Does this in O(n) time.
-# also returns a mapping of where min max and avg should fall per stat
+# also returns a list of the stat managers
 def calculateStats(sample , shouldPrint ):
-    # catagorical 
-    genderStatManager = CatagoricalStatManager("SEX")
-    palcatStatManager = CatagoricalStatManager("PALCAT")
-    # stat manager
-    ageStatManager = NumericStatManager("Age","years")
-    heightStatManager = NumericStatManager("Height","in")
-    weightStatManager = NumericStatManager("Weight","lbs")    
-    bmiStatManager = NumericStatManager( "BMI" ,"kg/m(^2)" )
-    tdeeStatManager = NumericStatManager( "TDEE","kcal" )
+    isAlpha = (sample[0]).isAlpha
+    managers = [CatagoricalStatManager("SEX","sex")  ,
+                NumericStatManager("Age","years","age"),
+                NumericStatManager("Height","in","heightInches"), 
+                NumericStatManager("Weight","lbs","weightPounds") ]  
+    if not isAlpha:
+        managers.extend((CatagoricalStatManager("PALCAT","activityLevel"),
+                        NumericStatManager( "BMI" ,"kg/m(^2)","bmi" ) ,
+                        NumericStatManager( "TDEE","kcal","tdee" )))
     
+    #calc stats
     for person in sample:
-        if not person.sex == None:
-            genderStatManager.update(person.sex)
-        if not person.age == None:
-            ageStatManager.update(person.age)
-        if not person.heightInches == None:
-            heightStatManager.update(person.heightInches )
-        if not person.weightPounds == None:
-            weightStatManager.update(person.weightPounds)
-        if not person.isAlpha:
-            bmiStatManager.update( person.bmi )
-            tdeeStatManager.update( person.tdee )
-            palcatStatManager.update( person.activityLevel )
+        for manager in managers:
+            if not (getattr( person , manager.subjPropertyName ) == None):
+                manager.update(person)
             
     # output
     if shouldPrint:
-        sampleSize = len(sample)
-        print("Sample size: " + str(sampleSize) )
-        print( genderStatManager )
-        print( ageStatManager )  
-        print( heightStatManager )
-        print( weightStatManager)      
-        if not (sample[0]).isAlpha: # these stats only calculated for subjects
-            print( bmiStatManager )
-            print( tdeeStatManager )
-            print( palcatStatManager )
+        for manager in managers:
+            print( manager )
+    
+    # stat managers returned
+    return managers
 
-    managers = [ genderStatManager, palcatStatManager, ageStatManager,
-                 heightStatManager, weightStatManager, bmiStatManager,
-                 tdeeStatManager ]
+            
+# returns a dictionary where keys are properties that describe a bucket and 
+# the values are list of subjects who fall in that bucket 
+def getBucketDictionary( subjects ):
+    # first filter out tdee. Wouldn't make sense to have target considered 
+    # in buckets
+    managers = calculateStats( subjects , False )
+    managers = list(filter(lambda man:  man.name != "TDEE" , managers) )
     
-    # all mnon empty stat managers returned
-    return list( filter( lambda manager: not manager.isEmpty(), managers ) )
+    ## mapping from bucketKey -> list of usbjects in bucket 
+    bucketDict = {}
     
+    for subject in subjects:
+        bucketKey =""
+        for manager in managers:
+            bucketKey += manager.getBucketForSubject(subject)+"_"
+        if not bucketKey in bucketDict.keys():
+            bucketDict[bucketKey] = []
+        bucketDict[bucketKey].append(subject)
+        
+    return bucketDict
+        
+    
+
+        
 #############################   MAIN     ###################################     
 def main():
     # get subjects
@@ -510,6 +479,7 @@ def main():
                   " /alphaStats      =>\tAll alpha stats \n" +
                   " /maleAlpha       =>\tMale alpha stats\n" +
                   " /femaleAlpha     =>\tFemale alpha stats\n" +
+                  " /buckets         =>\tPrints all buckets \n" +
                   " /quit            =>\tEnd script" ) 
         #subject
         elif userInput == "/subjectdata" :
@@ -537,6 +507,13 @@ def main():
         elif userInput == "/femalealpha":
             print("Stats for female apha users only: ")
             calculateStats(femaleAlphaUsers,True)
+        elif userInput == "/buckets":
+            print("All buckets in subject data: ")
+            buckets = getBucketDictionary(subjects)
+            for bucketKey in buckets.keys():
+                print("\n"+bucketKey) 
+                print("\tSubjects in bucket: "+ str(len(buckets[bucketKey])))
+            print("\n Total buckets: " + str(len(buckets.keys())))
         # utility   
         elif userInput == "/quit":
             print("\tTerminating Script  ")
