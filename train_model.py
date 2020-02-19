@@ -43,6 +43,8 @@ ageCoef = coefs[1]
 heightCoef = coefs[2]
 weightCoef = coefs[3]
 palCoef = coefs[4]
+############# GLOBAL SUBJ LIST ##########
+subjects = cleaner.cleanSubjectData()
 #########################################
 
 def getGenderCoef(isMale):
@@ -95,6 +97,15 @@ def checkDistribution(rawData):
 # a delay is added using pause
 def anacondaDisplayPlot():
     pause(1)
+    
+    
+# Builds what I am calling the 'optimal' algorithm. Builds mapping from bucket
+# to optimal equation. Returns a dictionary where keys are bucket keys 
+# and values are keys for which equation to use 
+def buildOptimal():
+    buckets = cleaner.getBucketDictionary(subjects)
+    for buck in buckets:
+        cleaner.printBucketKey(buck)
 
 #############################   MAIN     ###################################
 def main():
@@ -103,9 +114,10 @@ def main():
     while( True ):
         userInput = input("(Train-Model)>").lower().strip()
         if userInput == '/help':
-            print("\n\t/model\t=>\tLogSmarter's estimation model"
-                  "\n\t/dist \t=>\tHistogram of observed TDEE"
-                  "\n\t/quit \t=>\tEnd script" )
+            print("\n\t/model   \t=>\tLogSmarter's estimation model"
+                  "\n\t/dist    \t=>\tHistogram of observed TDEE"
+                  "\n\t/optimal \t=>\tMaps buckets -> equations"
+                  "\n\t/quit    \t=>\tEnd script" )
         
         # Plots
         elif userInput == "/model":
@@ -114,6 +126,9 @@ def main():
         elif userInput == "/dist":
             print("\tHistogram of TDEE Distribution:  ")
             checkDistribution(rawData)
+        elif userInput == "/optimal":
+            print("\tMapping buckets toequations:  ")
+            buildOptimal()
         # utility   
         elif userInput == "/quit":
             print("\tTerminating Script  ")

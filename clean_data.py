@@ -427,6 +427,25 @@ def calculateStats(sample , shouldPrint ):
     # stat managers returned
     return managers
 
+# Helper method for creating keys for the bucket dictionary.
+# Uses managers getBucket method to build a bucket key 
+def buildBucketKey( subject , managers ):
+    bucketKey =""
+    for manager in managers:
+        bucketKey += manager.getBucketForSubject(subject)+"_"
+    return bucketKey
+
+# Parses a bucket key and prints meaningful information that is true 
+# about all usbjects in that bucket 
+def printBucketKey( key ):
+    splitKey = key.split("_")
+    print("---------------------------------")
+    for key in splitKey :
+        parsed = key.split("-")
+        if len(parsed) > 1:
+            print(parsed[1].upper() + ": " + parsed[0].lower()  )
+    
+
             
 # returns a dictionary where keys are properties that describe a bucket and 
 # the values are list of subjects who fall in that bucket 
@@ -440,9 +459,7 @@ def getBucketDictionary( subjects ):
     bucketDict = {}
     
     for subject in subjects:
-        bucketKey =""
-        for manager in managers:
-            bucketKey += manager.getBucketForSubject(subject)+"_"
+        bucketKey = bucketKey = buildBucketKey(subject, managers)
         if not bucketKey in bucketDict.keys():
             bucketDict[bucketKey] = []
         bucketDict[bucketKey].append(subject)
