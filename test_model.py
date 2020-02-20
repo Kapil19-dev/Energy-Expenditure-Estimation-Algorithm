@@ -112,15 +112,24 @@ class EnergyComparisonResult():
             self.max = 0
             self.total = 0
             self.absTotal = 0
-            #Accumulator for MSE
-            #RMSE seems like best estimate her
             self.sumObservedPredictedDiffSquared = 0
             # total number of subjects we've added data for
             self.count = 0
+
+    def getMSE(self):
+        return self.sumObservedPredictedDiffSquared/self.count
+            
+    def getRMSE(self):
+        return math.sqrt(self.getMSE())
     
+    def getMAE(self):
+        return self.absTotal/self.count
+        
     #updates min max and avg for a subjects difference from their 
     # true estimate for a given technique 
-    def updateForNewSubject( self, estimate , actual  ):
+    def updateForSubjectResult( self, result ):
+        estimate = getattr( result, self.techniqueName )
+        actual = result.subject.tdee
         difference = actual - estimate 
         if ( difference < self.min or self.min == 0 ):
             self.min = difference
@@ -141,12 +150,11 @@ class EnergyComparisonResult():
          "\n\tAvg difference:                   " +
               str(round(self.total/self.count,2)) +
          "\n\tMAE:                              " +
-              str(round(self.absTotal/self.count,2)) +
+              str(round(self.getMAE(),2)) +
          "\n\tMSE:                              " + 
-              str(round(self.sumObservedPredictedDiffSquared/self.count,2)) +
+              str(round(self.getMSE(),2)) +
          "\n\tRMSE:                             " + 
-              str(round(math.sqrt(
-                      self.sumObservedPredictedDiffSquared/self.count),2)))
+              str(round(self.getRMSE(),2)))
         
 #helper method to remove trailing 0's from string
 def removeTrailing( numberAsString  ):
@@ -249,44 +257,23 @@ def buildEnergyExpenditureResults( subjectList ):
   
 # Calculates min max and average difference for estimation techniques from
 # true measure of TDEE for a subject 
-def testAndCompareModels( resultList ):
-    
-    ###### ADD VARIABLES TO CALCULAE R^2
-    originalHarrisManager = EnergyComparisonResult("Original Harris Benedict")
-    revisedHarrisManager = EnergyComparisonResult("Revised Harris Benedict")
-    mifflinStJeorManager = EnergyComparisonResult("Mifflin St Jeor")
-    owenManager = EnergyComparisonResult("Owen")
-    whoFaoUnuManager = EnergyComparisonResult("Who Fao Unu")
-    logSmarterManager = EnergyComparisonResult("LogSmarter")
+def testAndCompareModels( resultList , shouldPrint ):
+    managers = [ EnergyComparisonResult("originalHarrisBenedict"),
+                 EnergyComparisonResult("revisedHarrisBenedict"),
+                 EnergyComparisonResult("mifflinStJeor"),
+                 EnergyComparisonResult("owen"),
+                 EnergyComparisonResult("whoFaoUnu"),
+                 EnergyComparisonResult("logSmarter") ]
     
     for result in resultList:
-        #calculate differences observed in estimate from actual 
-        originalHarrisManager.updateForNewSubject( 
-                result.originalHarrisBenedict , result.trueTDEE  )
-
-        revisedHarrisManager.updateForNewSubject(  
-                result.revisedHarrisBenedict , result.trueTDEE )
-
-        mifflinStJeorManager.updateForNewSubject( 
-                result.mifflinStJeor , result.trueTDEE )
-        
-        owenManager.updateForNewSubject( 
-                result.owen , result.trueTDEE )
-        
-        whoFaoUnuManager.updateForNewSubject( 
-                result.whoFaoUnu , result.trueTDEE )
-        
-        logSmarterManager.updateForNewSubject( 
-                result.logSmarter , result.trueTDEE )
-
-    # output
-    print( originalHarrisManager )
-    print( revisedHarrisManager )
-    print( mifflinStJeorManager )
-    print( owenManager )
-    print( whoFaoUnuManager )
-    print( logSmarterManager )
-    return
+        for manager in managers:
+            manager.updateForSubjectResult(result)
+            
+    if shouldPrint:
+        for manager in managers:
+            print(manager)
+    
+    return managers
 
 
 #Exports errors from different extimation techniques to CSV
@@ -301,12 +288,13 @@ def exportResultsAndErrors( energyResultsList ):
         colHeaders = [ "subjNum","TDEE",
                        "originalHarris","originalHarrisError",
                        "revisedHarris","revisedHarrisError",
-                       "whoFaoUnu","whoFaoUnu",
+                       "whoFaoUnu","whoFaoUnuError",
                        "owen","owenError",      
                        "mifflinStJeor","mifflinStJeorError",
                        "logSmarter","logSmarterError",
                        "Sex","Age","HeightInches","WeightPounds",
                        "bmi", "activityLevel"]
+    
         rowList.append( colHeaders )
         # Sort list with higher LS errors at top, want to find demographic  
         # that we are overestimating for 
@@ -316,8 +304,7 @@ def exportResultsAndErrors( energyResultsList ):
             harrisDiffLS = abs(result.trueTDEE - result.logSmarter) - abs(result.trueTDEE - result.revisedHarrisBenedict)  
             errorRow.append(harrisDiffLS)
             rowList.append(errorRow)
-         
-           
+  
         writer.writerows( rowList )
         writeFile.close()
     
@@ -344,7 +331,7 @@ def main():
             for result in subjectResultsList:
                 print( result.bmrToString() )
         elif userInput == "/compare" :
-            testAndCompareModels(subjectResultsList)
+            testAndCompareModels(subjectResultsList, True)
         elif userInput == "/export" :
             exportResultsAndErrors(subjectResultsList)
             print("\n\tExported results and result errors to data/error.csv\n")

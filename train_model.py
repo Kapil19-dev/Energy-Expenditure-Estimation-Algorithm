@@ -4,6 +4,7 @@ Ryan Lefebvre 1/26/2020
 """
 
 import clean_data as cleaner 
+import test_model as tester
 import matplotlib.pyplot as plt  
 from matplotlib.pyplot import pause
 from sklearn.linear_model import LinearRegression
@@ -71,18 +72,18 @@ def getLogSmarterModel():
     
     print("\n\t\tTDEE(M) = "
           "\n\t\t       (" + str(round(intercept +
-                                       maleGenderCoef,2)) + ")         +"
+                                       maleGenderCoef,2)) + ")          +"
           "\n\t\t       (" + str(round(ageCoef,2)) + "   * AGE)    +"
-          "\n\t\t       (" + str(round(heightCoef,2)) + "  * HEIGHT) +"
-          "\n\t\t       (" + str(round(weightCoef,2)) + "   * WEIGHT) +"
+          "\n\t\t       (" + str(round(heightCoef,2)) + "   * HEIGHT) +"
+          "\n\t\t       (" + str(round(weightCoef,2)) + "    * WEIGHT) +"
           "\n\t\t       (" + str(round(palCoef,2)) + " * PALCAT)" )
     
     print("\n\t\tTDEE(F) = " 
           "\n\t\t       (" + str(round(intercept +
-                                       femaleGenderCoef,2)) + ")          +" 
+                                       femaleGenderCoef,2)) + ")         +" 
           "\n\t\t       (" + str(round(ageCoef,2)) + "   * AGE)    +"
-          "\n\t\t       (" + str(round(heightCoef,2)) + "  * HEIGHT) +"
-          "\n\t\t       (" + str(round(weightCoef,2)) + "   * WEIGHT) +"
+          "\n\t\t       (" + str(round(heightCoef,2)) + "   * HEIGHT) +"
+          "\n\t\t       (" + str(round(weightCoef,2)) + "    * WEIGHT) +"
           "\n\t\t       (" + str(round(palCoef,2)) + " * PALCAT)")
 
 #displays historgram of TDEE distribution 
@@ -102,11 +103,21 @@ def anacondaDisplayPlot():
 # Builds what I am calling the 'optimal' algorithm. Builds mapping from bucket
 # to optimal equation. Returns a dictionary where keys are bucket keys 
 # and values are keys for which equation to use 
-def buildOptimal():
+def buildOptimalDict():
     buckets = cleaner.getBucketDictionary(subjects)
-    for buck in buckets:
-        cleaner.printBucketKey(buck)
-
+    optimalDict = {}
+    for bucketKey in buckets:
+        subjectsInBucket = buckets[bucketKey]
+        subjResults = tester.buildEnergyExpenditureResults(subjectsInBucket)
+        errors = tester.testAndCompareModels(subjResults , False)
+        optimalName = min( errors, key=lambda err: err.getRMSE() ).techniqueName
+        #mapping from bucket -> optimal eq
+        optimalDict[bucketKey] =  optimalName
+        print( bucketKey + " --> " + optimalName + "\n" )
+    
+    
+        
+        
 #############################   MAIN     ###################################
 def main():
     rawData = cleaner.getRawDataAsPandas()
@@ -127,8 +138,8 @@ def main():
             print("\tHistogram of TDEE Distribution:  ")
             checkDistribution(rawData)
         elif userInput == "/optimal":
-            print("\tMapping buckets toequations:  ")
-            buildOptimal()
+            print("\tMapping buckets to equations:  ")
+            buildOptimalDict()
         # utility   
         elif userInput == "/quit":
             print("\tTerminating Script  ")
