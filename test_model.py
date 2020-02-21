@@ -28,6 +28,7 @@ class SubjectEnergyResults():
         self.whoFaoUnu = ( getWhoFaoUnu(subject) *
                           subject.getActivityMultiplier() )
         self.owen = getOwen(subject) * subject.getActivityMultiplier() 
+        self.optimal = -1
 
     #converts to string
     def __str__(self):
@@ -47,6 +48,8 @@ class SubjectEnergyResults():
                     removeTrailing(str(round(self.owen,0))) +
                 "\n\tWHO-FAO-UNU:              " +
                     removeTrailing(str(round(self.whoFaoUnu,0))) +
+                "\n\tWHO-FAO-UNU:              " +
+                    removeTrailing(str(round(self.optimal,0))) +
                 "\n--------------------------------------------------"
                 )
     
@@ -59,6 +62,7 @@ class SubjectEnergyResults():
         mifflinStJeorError = abs(self.trueTDEE- self.mifflinStJeor )
         whoFaoUnuError = abs( self.trueTDEE - self.whoFaoUnu )
         logSmarterError = abs(self.trueTDEE- self.logSmarter) 
+        optimalError = abs(self.trueTDEE- self.optimal) 
         return [ self.subjectID, self.trueTDEE, 
                  round(self.originalHarrisBenedict,2),
                  round(originalHarrisError,2),
@@ -72,6 +76,8 @@ class SubjectEnergyResults():
                  round(mifflinStJeorError,2),
                  round(self.logSmarter,2), 
                  round(logSmarterError,2),
+                 round(self.optimal,2), 
+                 round(optimalError,2),
                  self.subject.sex , self.subject.age,
                  self.subject.heightInches, self.subject.weightPounds,
                  self.subject.bmi, self.subject.activityLevel]
@@ -98,6 +104,9 @@ class SubjectEnergyResults():
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n\tWHO-FAO-UNU:              " +
                     removeTrailing(str(round(self.whoFaoUnu /
+                                self.subject.getActivityMultiplier(),0))) +
+                "\n\tOptimal:              " +
+                    removeTrailing(str(round(self.optimal /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------")
 
@@ -246,6 +255,12 @@ def getLogSmarter( subject ):
             subject.isMale(),
             subject.getActivityMultiplier())
             
+    
+# returns optimal estimate for subject bucket
+def getOptimal( subjectResult ):
+    optimalMethod =  LogSmarter.estimateOptimal(subjectResult.subject)
+    estimate = getattr(subjectResult,optimalMethod)
+    return estimate
 
 # Returns a list of objects that contain different estimates of TDEE 
 # for a given subject. 
@@ -275,6 +290,30 @@ def testAndCompareModels( resultList , shouldPrint ):
     
     return managers
 
+# same as test and compare but includes analysis of the 'optimal' eq for
+# each subject bucket 
+def testAndCompareOptimal():
+    
+    managers = [ EnergyComparisonResult("originalHarrisBenedict"),
+                 EnergyComparisonResult("revisedHarrisBenedict"),
+                 EnergyComparisonResult("mifflinStJeor"),
+                 EnergyComparisonResult("owen"),
+                 EnergyComparisonResult("whoFaoUnu"),
+                 EnergyComparisonResult("logSmarter"),
+                 EnergyComparisonResult("optimal")]
+        
+    for result in resultList:
+        #need to set optimal
+        result.optimal = getOptimal(result)
+        for manager in managers:
+            manager.updateForSubjectResult(result)
+            
+    if shouldPrint:
+        for manager in managers:
+            print(manager)
+    
+    return managers 
+
 
 #Exports errors from different extimation techniques to CSV
 def exportResultsAndErrors( energyResultsList ):
@@ -292,6 +331,7 @@ def exportResultsAndErrors( energyResultsList ):
                        "owen","owenError",      
                        "mifflinStJeor","mifflinStJeorError",
                        "logSmarter","logSmarterError",
+                       "optimal","optimalError",
                        "Sex","Age","HeightInches","WeightPounds",
                        "bmi", "activityLevel"]
     
@@ -321,6 +361,7 @@ def main():
                   " /tdeeData        =>\tPrint tdee result dataset\n"+
                   " /bmrData         =>\tPrint bmr result dataset\n"+
                   " /compare         =>\tPrint TDEE estimation comparison\n"+
+                  " /compareOpt      =>\tCompares with optimal\n"+
                   " /export          =>\tExports results and errors\n"+
                   " /quit            =>\tEnd script" ) 
         #results
@@ -330,6 +371,8 @@ def main():
         elif userInput == "/bmrdata" :
             for result in subjectResultsList:
                 print( result.bmrToString() )
+        elif userInput == "/bmrdata" :
+            testAndCompareOptimal()
         elif userInput == "/compare" :
             testAndCompareModels(subjectResultsList, True)
         elif userInput == "/export" :

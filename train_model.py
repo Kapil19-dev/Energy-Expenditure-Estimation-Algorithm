@@ -46,6 +46,8 @@ weightCoef = coefs[3]
 palCoef = coefs[4]
 ############# GLOBAL SUBJ LIST ##########
 subjects = cleaner.cleanSubjectData()
+results = tester.buildEnergyExpenditureResults(subjects )
+managers = tester.testAndCompareModels( results , False )
 #########################################
 
 def getGenderCoef(isMale):
@@ -65,7 +67,6 @@ def estimate(heightInches, weightPounds, ageYears,
             ( palMult * palCoef ) + 
             ( getGenderCoef(isMale) ),2)
             
-
 
 #Prints LogSmarter model to the console 
 def getLogSmarterModel():
@@ -116,7 +117,12 @@ def buildOptimalDict():
         print( bucketKey + " --> " + optimalName + "\n" )
     
     
-        
+
+#returns optimal estimation method for a subject
+def estimateOptimal(subject):
+    optimalDict = buildOptimalDict()
+    optimalKey = cleaner.buildBucketKey(subject,managers)
+    return optimalDict[optimalKey]
         
 #############################   MAIN     ###################################
 def main():
