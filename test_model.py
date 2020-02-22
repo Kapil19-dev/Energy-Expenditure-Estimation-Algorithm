@@ -248,13 +248,8 @@ def getWhoFaoUnu( subject ):
             
 #LogSmarters model of estimating TDEE 
 def getLogSmarter( subject ):
-    return LogSmarter.estimate(
-            subject.heightInches,
-            subject.weightPounds,
-            subject.age,
-            subject.isMale(),
-            subject.getActivityMultiplier())
-            
+    estimate = LogSmarter.estimate(subject.heightInches,subject.weightPounds,subject.age,subject.isMale,subject.getAcivityMultiplier())
+    return estimate
     
 # returns optimal estimate for subject bucket
 def getOptimal( subjectResult ):
@@ -292,7 +287,7 @@ def testAndCompareModels( resultList , shouldPrint ):
 
 # same as test and compare but includes analysis of the 'optimal' eq for
 # each subject bucket 
-def testAndCompareOptimal():
+def testAndCompareOptimal(resultList , shouldPrint ):
     
     managers = [ EnergyComparisonResult("originalHarrisBenedict"),
                  EnergyComparisonResult("revisedHarrisBenedict"),
@@ -372,7 +367,7 @@ def main():
             for result in subjectResultsList:
                 print( result.bmrToString() )
         elif userInput == "/bmrdata" :
-            testAndCompareOptimal()
+            testAndCompareOptimal( subjectResultsList , True)
         elif userInput == "/compare" :
             testAndCompareModels(subjectResultsList, True)
         elif userInput == "/export" :

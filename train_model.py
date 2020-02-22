@@ -47,7 +47,7 @@ palCoef = coefs[4]
 ############# GLOBAL SUBJ LIST ##########
 subjects = cleaner.cleanSubjectData()
 results = tester.buildEnergyExpenditureResults(subjects )
-managers = tester.testAndCompareModels( results , False )
+#managers = tester.testAndCompareModels( results , False )
 #########################################
 
 def getGenderCoef(isMale):
@@ -57,8 +57,7 @@ def getGenderCoef(isMale):
         return femaleGenderCoef
 
 # returns an estimated TDEE using the LogSmarter model 
-def estimate(heightInches, weightPounds, ageYears,
-                  isMale, palMult ):
+def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
     return round( 
             ( intercept ) +
             ( ageYears * ageCoef ) +
