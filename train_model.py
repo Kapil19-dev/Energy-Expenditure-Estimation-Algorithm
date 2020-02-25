@@ -46,7 +46,7 @@ weightCoef = coefs[3]
 palCoef = coefs[4]
 ############# GLOBAL SUBJ LIST ##########
 subjects = cleaner.cleanSubjectData()
-results = tester.buildEnergyExpenditureResults(subjects )
+#results = tester.buildEnergyExpenditureResults(subjects )
 #managers = tester.testAndCompareModels( results , False )
 #########################################
 
