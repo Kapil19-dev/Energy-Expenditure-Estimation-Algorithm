@@ -19,10 +19,69 @@ def build():
     results = tester.buildEnergyExpenditureResults(subjects)
     # get list of errors 
     errors = tester.testAndCompareModels(results, False)
+    # build buckets to optimal equation form list of errors
+    buckets = getBucketDictionary( subjects )
+    #calculate optimal equation for each bucket 
+    # final reuslt is mapping from bucket --> equation
+    optimalDict = buildOptimalDict(buckets)
     
-    for error in errors:
-        print( error )
-##############################################################################    
+
+##############################################################################   
+    
+
+##########################  BUCKET METHODS ###################################  
+# Helper method for creating keys for the bucket dictionary.
+# Uses managers getBucket method to build a bucket key 
+def buildBucketKey( subject , managers ):
+    bucketKey =""
+    for manager in managers:
+        bucketKey += manager.getBucketForSubject(subject)+"_"
+    return bucketKey
+
+# Parses a bucket key and prints meaningful information that is true 
+# about all usbjects in that bucket 
+def printBucketKey( key ):
+    splitKey = key.split("_")
+    print("---------------------------------")
+    for key in splitKey :
+        parsed = key.split("-")
+        if len(parsed) > 1:
+            print(parsed[1].upper() + ": " + parsed[0].lower()  )
+
+# returns a dictionary where keys are properties that describe a bucket and 
+# the values are list of subjects who fall in that bucket 
+def getBucketDictionary( subjects ):
+    # first filter out tdee. Wouldn't make sense to have target considered 
+    # in buckets
+    managers = cleaner.calculateStats( subjects , False )
+    managers = list(filter(lambda man:  man.name != "TDEE" , managers) )
+    
+    ## mapping from bucketKey -> list of usbjects in bucket 
+    bucketDict = {}
+    
+    for subject in subjects:
+        bucketKey = bucketKey = buildBucketKey(subject, managers)
+        if not bucketKey in bucketDict.keys():
+            bucketDict[bucketKey] = []
+        bucketDict[bucketKey].append(subject)
+        
+    return bucketDict
+
+# Builds what I am calling the 'optimal' algorithm. Builds mapping from bucket
+# to optimal equation. Returns a dictionary where keys are bucket keys 
+# and values are keys for which equation to use 
+def buildOptimalDict(buckets):
+    optimalDict = {}
+    for bucketKey in buckets:
+        subjectsInBucket = buckets[bucketKey]
+        subjResults = tester.buildEnergyExpenditureResults(subjectsInBucket)
+        errors = tester.testAndCompareModels(subjResults , False)
+        optimalName = min( errors, key=lambda err: err.getRMSE() ).techniqueName
+        #mapping from bucket -> optimal eq
+        optimalDict[bucketKey] =  optimalName
+    return optimalDict
+            
+##############################################################################  
     
     
     
