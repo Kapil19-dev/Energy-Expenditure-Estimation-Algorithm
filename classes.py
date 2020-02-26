@@ -5,6 +5,10 @@ Created on Sun Feb 23 19:25:15 2020
 @author: Ryan
 """
 
+import helper
+import equations
+import math
+
 ###############################   CLEAN DATA    ###############################
 
 #Representas an alpha user in our system
@@ -51,7 +55,7 @@ class AlphaUser():
         if self.heightInches == None:
             return ""
         else:
-            return str(inchesToFeetAndInches((self.heightInches)))
+            return str(helper.inchesToFeetAndInches((self.heightInches)))
         
     def __str__(self):
         return ( "User id:  " +
@@ -95,23 +99,23 @@ class Subject():
         return self.sex == "M"
     
     def getWeightKg(self):
-        return lbsToKg(self.weightPounds)
+        return helper.lbsToKg(self.weightPounds)
     
     def getHeightCm(self):
-        return inchesToCm(self.heightInches)
+        return helper.inchesToCm(self.heightInches)
     
     def getHeightMeters(self):
-        return inchesToMeters( self.heightInches )
+        return helper.inchesToMeters( self.heightInches )
     
     def getActivityMultiplier(self):
-        return getActivityLevelNumVal(self.activityLevel)
+        return helper.getActivityLevelNumVal(self.activityLevel)
         
     
     def __str__(self):
         return ( "Subject Number: " + str(self.subjNum ) + "\tSex: "+
                 str(self.sex) + "\tAge: " + str(self.age) + "\tWeight: "+
                 str(self.weightPounds)+ "\tHeight: " +
-                str(inchesToFeetAndInches((self.heightInches))) + "\tBMI: "+
+                str(helper.inchesToFeetAndInches((self.heightInches))) + "\tBMI: "+
                 str(self.bmi) + "\tTDEE: " + str(self.tdee) + 
                 "\tActivity Level: " + str(self.activityLevel) + "\n" )
         
@@ -167,7 +171,6 @@ class NumericStatManager():
         val = getattr(subj,self.subjPropertyName)
         bucket = ""
         q1 = self.quartiles[0]
-        q2 = self.quartiles[1]
         q3 = self.quartiles[3]
         if val <= q1:
             bucket = "low"
@@ -226,8 +229,8 @@ class CatagoricalStatManager():
         else:
             for key , value in self.catagoryCounts.items():
                 retStr += ( "\n\t Total " + key +  ": " + 
-                           strRound( value, 2  ) + "\n\t\t % " + key +
-                           ": " +strRound((value/self.reported)*100,2 )+"%")
+                           helper.strRound( value, 2  ) + "\n\t\t % " + key +
+                           ": " + helper.strRound((value/self.reported)*100,2 )+"%")
         return retStr
     
     #true if empty
@@ -246,15 +249,15 @@ class SubjectEnergyResults():
         # TDEE = BMR estimate * activityLevel
         # below is a comprehensive source of all popular estimation methods
         # https://completehumanperformance.com/2013/10/08/calorie-needs/
-        self.originalHarrisBenedict = (getOriginalHarrisBenedict( subject ) *
+        self.originalHarrisBenedict = (equations.getOriginalHarrisBenedict( subject ) *
                                        subject.getActivityMultiplier() )
-        self.revisedHarrisBenedict = (getRevisedHarrisBenedict( subject ) *
+        self.revisedHarrisBenedict = (equations.getRevisedHarrisBenedict( subject ) *
                                       subject.getActivityMultiplier() )
-        self.mifflinStJeor = (getMifflinStJeor(subject) *
+        self.mifflinStJeor = (equations.getMifflinStJeor(subject) *
                               subject.getActivityMultiplier() )
-        self.whoFaoUnu = ( getWhoFaoUnu(subject) *
+        self.whoFaoUnu = ( equations.getWhoFaoUnu(subject) *
                           subject.getActivityMultiplier() )
-        self.owen = getOwen(subject) * subject.getActivityMultiplier() 
+        self.owen = equations.getOwen(subject) * subject.getActivityMultiplier() 
         self.optimal = -1
 
     #converts to string
@@ -263,20 +266,20 @@ class SubjectEnergyResults():
                 "\n\tTrue TDEE:                " +
                     str(round(self.trueTDEE,0) ) +
                 "\n\tLogSmarter:               " +
-                    removeTrailing(str(round(self.logSmarter,0))) +
+                    helper.removeTrailing(str(round(self.logSmarter,0))) +
                 "\n---------- TDEE ESTIMATES -----------" +
                 "\n\tOriginal Harris Benedict: " +
-                    removeTrailing(str(round(self.originalHarrisBenedict,0)))+ 
+                    helper.removeTrailing(str(round(self.originalHarrisBenedict,0)))+ 
                 "\n\tRevised Harris Benedict:  " +
-                    removeTrailing(str(round(self.revisedHarrisBenedict,0)))+
+                    helper.removeTrailing(str(round(self.revisedHarrisBenedict,0)))+
                 "\n\tMifflin-St Jeor:          " +
-                    removeTrailing(str(round(self.mifflinStJeor,0))) +
+                    helper.removeTrailing(str(round(self.mifflinStJeor,0))) +
                 "\n\tOwen:                     " +
-                    removeTrailing(str(round(self.owen,0))) +
+                    helper.removeTrailing(str(round(self.owen,0))) +
                 "\n\tWHO-FAO-UNU:              " +
-                    removeTrailing(str(round(self.whoFaoUnu,0))) +
+                    helper.removeTrailing(str(round(self.whoFaoUnu,0))) +
                 "\n\tWHO-FAO-UNU:              " +
-                    removeTrailing(str(round(self.optimal,0))) +
+                    helper.removeTrailing(str(round(self.optimal,0))) +
                 "\n--------------------------------------------------"
                 )
     
@@ -315,25 +318,25 @@ class SubjectEnergyResults():
                 "\n\tTrue TDEE:                " +
                     str(round(self.trueTDEE,0) ) +
                 "\n\tLogSmarter:               " +
-                    removeTrailing(str(round(self.logSmarter,0))) +
+                    helper.removeTrailing(str(round(self.logSmarter,0))) +
                 "\n---------- BMR ESTIMATES -----------" + 
                 "\n\tOriginal Harris Benedict: " +
-                    removeTrailing(str(round(self.originalHarrisBenedict / 
+                    helper.removeTrailing(str(round(self.originalHarrisBenedict / 
                                 self.subject.getActivityMultiplier() ,0)))+ 
                 "\n\tRevised Harris Benedict:  " +
-                    removeTrailing(str(round(self.revisedHarrisBenedict /
+                    helper.removeTrailing(str(round(self.revisedHarrisBenedict /
                                 self.subject.getActivityMultiplier() ,0)))+
                 "\n\tMifflin-St Jeor:          " +
-                    removeTrailing(str(round(self.mifflinStJeor /
+                    helper.removeTrailing(str(round(self.mifflinStJeor /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n\tOwen:                     " +
-                    removeTrailing(str(round(self.owen / 
+                    helper.removeTrailing(str(round(self.owen / 
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n\tWHO-FAO-UNU:              " +
-                    removeTrailing(str(round(self.whoFaoUnu /
+                    helper.removeTrailing(str(round(self.whoFaoUnu /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n\tOptimal:              " +
-                    removeTrailing(str(round(self.optimal /
+                    helper.removeTrailing(str(round(self.optimal /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------")
 

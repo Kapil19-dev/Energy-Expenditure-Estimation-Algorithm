@@ -248,7 +248,7 @@ def getWhoFaoUnu( subject ):
             
 #LogSmarters model of estimating TDEE 
 def getLogSmarter( subject ):
-    estimate = LogSmarter.estimate(subject.heightInches,subject.weightPounds,subject.age,subject.isMale,subject.getAcivityMultiplier())
+    estimate = LogSmarter.estimate(subject.heightInches,subject.weightPounds,subject.age,subject.isMale,subject.getActivityMultiplier())
     return estimate
     
 # returns optimal estimate for subject bucket
