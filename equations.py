@@ -79,5 +79,18 @@ def getWhoFaoUnu( subject ):
             return ( (9.2 * subject.getWeightKg()) +
                     (637 * subject.getHeightMeters()) - 302 )
             
+# Place holder for LogSmarter model. The definition of this function is 
+# replaced once train model is executed and the function will use the LS 
+# model to produce a TDEE estimate for a subject 
+def getLogSmarter( subject ):
+    return -1
+
+# Place holder for Discrete model. The definition of this function is 
+# replaced once discrete is executed and the function will use the discrete
+# model to produce a TDEE estimate for a subject by finding the optimal 
+# equation for whatever bucket a subject falls into 
+def getDiscrete( subject ):
+    return -1
+            
 
 ##############################################################################

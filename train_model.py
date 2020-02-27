@@ -7,6 +7,7 @@ from matplotlib.pyplot import pause
 from sklearn.linear_model import LinearRegression
 import seaborn as seabornInstance
 import clean_data as cleaner 
+import equations as equations
 import helper as helpers
 
 
@@ -47,7 +48,16 @@ def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
             ( weightPounds * weightCoef ) +
             ( palMult * palCoef ) + 
             ( getGenderCoef(isMale) ),2)
-            
+
+#Helper method for estimate that takes a subject as a param. Used as param for
+# creating subject energy results class instances so they know how to calc LS 
+# EE estimates
+def getLogSmarter(subject):
+    return estimate( subject.heightInches,
+                     subject.weightPounds,
+                     subject.age,
+                     subject.isMale(),
+                     subject.getActivityMultiplier())
 
 #Prints LogSmarter model to the console in readable format
 def getLogSmarterModel():
@@ -92,6 +102,8 @@ ageCoef = coefs[1]
 heightCoef = coefs[2]
 weightCoef = coefs[3]
 palCoef = coefs[4]
+#Update get LogSmarter in equations.py
+equations.getLogSmarter = getLogSmarter
 ##############################################################################
         
 #############################   MAIN     #####################################

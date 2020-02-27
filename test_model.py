@@ -5,12 +5,14 @@ Ryan Lefebvre 1/26/2020
 
 import clean_data as cleaner 
 import classes as classes
+# Without this import the model will not be built
+# and available throug equations.py
+import train_model as model
 import csv 
 
 # Returns a list of objects that contain different estimates of TDEE 
 # for a given subject. 
-def buildEnergyExpenditureResults():
-    subjectList = cleaner.getSubjects()
+def buildEnergyExpenditureResults(subjectList):
     results = []
     for subject in subjectList:
         results.append( classes.SubjectEnergyResults(subject) )
@@ -33,18 +35,24 @@ def testAndCompareModels( resultList):
     return managers
 
 #########################  GLOBAL VARIABLES ##########################         
-subjectResultsList = buildEnergyExpenditureResults()
+subjectResultsList = buildEnergyExpenditureResults(cleaner.getSubjects())
 managers = testAndCompareModels( subjectResultsList )
+
+#helper for getting managers 
+def getModelManagers():
+    global managers
+    return managers
+
+
+def getSubjectResultsList():
+    global subjectResultsList
+    return subjectResultsList
 ######################################################################
 
 
 #Exports errors from different extimation techniques to CSV
 def exportResultsAndErrors( energyResultsList ):
-    
-    #### SORT BY ONES WHERE HARRIS BENEDICT BEATS LS BY MOST
-    sortedResultsList = sorted( energyResultsList, key=lambda result:
-         abs(result.trueTDEE - result.logSmarter) - abs(
-                 result.trueTDEE - result.revisedHarrisBenedict), reverse=True)
+
     with open('data/error.csv' , 'w', newline='' ) as writeFile:
         writer = csv.writer( writeFile )
         rowList = []
@@ -62,7 +70,7 @@ def exportResultsAndErrors( energyResultsList ):
         rowList.append( colHeaders )
         # Sort list with higher LS errors at top, want to find demographic  
         # that we are overestimating for 
-        for result in sortedResultsList:
+        for result in energyResultsList:
             errorRow = result.toErrorRow()
             # sort by rows where LSDiff > RevisedHarrisDiff
             harrisDiffLS = abs(result.trueTDEE - result.logSmarter) - abs(
@@ -78,13 +86,12 @@ def main():
     global subjectResultsList
     print("For list of commands '/help'")
     while( True ):
-        userInput = input("(Test-Model)>").lower().strip()
+        userInput = input("(Test-Model)> ").lower().strip()
         if userInput == '/help':
             print("\n" +
                   " /tdeeData        =>\tPrint tdee result dataset\n"+
                   " /bmrData         =>\tPrint bmr result dataset\n"+
                   " /compare         =>\tPrint TDEE estimation comparison\n"+
-                  " /compareOpt      =>\tCompares with optimal\n"+
                   " /export          =>\tExports results and errors\n"+
                   " /quit            =>\tEnd script" ) 
         #results

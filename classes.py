@@ -10,7 +10,6 @@ import equations
 import math
 
 ###############################   CLEAN DATA    ###############################
-
 #Represents an alpha user in our system
 class AlphaUser():
     def __init__( self,
@@ -239,12 +238,13 @@ class CatagoricalStatManager():
     
 ###############################   TEST RESULTS  ###############################
 class SubjectEnergyResults():
-    #constructor
+    #constructor , takes a subject and function to use to calc LS EE estimate
     def __init__( self,subject):
         self.subject = subject
         self.subjectID = subject.subjNum
         self.trueTDEE = subject.tdee
-        self.logSmarter = 0
+        self.logSmarter = equations.getLogSmarter(subject)
+        self.discrete = equations.getDiscrete(subject)
         ############## BELOW ARE BMR ESTIMATES #########################
         # TDEE = BMR estimate * activityLevel
         # below is a comprehensive source of all popular estimation methods
@@ -258,7 +258,7 @@ class SubjectEnergyResults():
         self.whoFaoUnu = ( equations.getWhoFaoUnu(subject) *
                           subject.getActivityMultiplier() )
         self.owen = equations.getOwen(subject) * subject.getActivityMultiplier() 
-        self.optimal = -1
+        
 
     #converts to string
     def __str__(self):
@@ -386,3 +386,4 @@ class EnergyComparisonResult():
               str(round(self.getMSE(),2)) +
          "\n\tRMSE:                             " + 
               str(round(self.getRMSE(),2)))
+#############################################################################
