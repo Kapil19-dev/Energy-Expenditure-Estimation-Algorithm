@@ -81,4 +81,10 @@ def upperTrim( string ):
 def removeTrailing( numberAsString  ):
     return numberAsString.rstrip('0').rstrip('.')
 
+# measurements of energy expdentiture in dataset are separated 
+# by commas and stored as strings, this function converts them 
+# to an int 
+def parseEnergyExpenditure( energyExpenditure):
+    return int( energyExpenditure.replace(",","") )
+
 #############################################################################

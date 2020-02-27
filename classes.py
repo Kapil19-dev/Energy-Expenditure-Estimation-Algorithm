@@ -11,7 +11,7 @@ import math
 
 ###############################   CLEAN DATA    ###############################
 
-#Representas an alpha user in our system
+#Represents an alpha user in our system
 class AlphaUser():
     def __init__( self,
                    uid,
@@ -244,7 +244,7 @@ class SubjectEnergyResults():
         self.subject = subject
         self.subjectID = subject.subjNum
         self.trueTDEE = subject.tdee
-        self.logSmarter = getLogSmarter( subject )
+        self.logSmarter = 0
         ############## BELOW ARE BMR ESTIMATES #########################
         # TDEE = BMR estimate * activityLevel
         # below is a comprehensive source of all popular estimation methods
@@ -278,8 +278,6 @@ class SubjectEnergyResults():
                     helper.removeTrailing(str(round(self.owen,0))) +
                 "\n\tWHO-FAO-UNU:              " +
                     helper.removeTrailing(str(round(self.whoFaoUnu,0))) +
-                "\n\tWHO-FAO-UNU:              " +
-                    helper.removeTrailing(str(round(self.optimal,0))) +
                 "\n--------------------------------------------------"
                 )
     
@@ -292,7 +290,6 @@ class SubjectEnergyResults():
         mifflinStJeorError = abs(self.trueTDEE- self.mifflinStJeor )
         whoFaoUnuError = abs( self.trueTDEE - self.whoFaoUnu )
         logSmarterError = abs(self.trueTDEE- self.logSmarter) 
-        optimalError = abs(self.trueTDEE- self.optimal) 
         return [ self.subjectID, self.trueTDEE, 
                  round(self.originalHarrisBenedict,2),
                  round(originalHarrisError,2),
@@ -306,8 +303,6 @@ class SubjectEnergyResults():
                  round(mifflinStJeorError,2),
                  round(self.logSmarter,2), 
                  round(logSmarterError,2),
-                 round(self.optimal,2), 
-                 round(optimalError,2),
                  self.subject.sex , self.subject.age,
                  self.subject.heightInches, self.subject.weightPounds,
                  self.subject.bmi, self.subject.activityLevel]
@@ -334,9 +329,6 @@ class SubjectEnergyResults():
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n\tWHO-FAO-UNU:              " +
                     helper.removeTrailing(str(round(self.whoFaoUnu /
-                                self.subject.getActivityMultiplier(),0))) +
-                "\n\tOptimal:              " +
-                    helper.removeTrailing(str(round(self.optimal /
                                 self.subject.getActivityMultiplier(),0))) +
                 "\n--------------------------------------------------")
 
