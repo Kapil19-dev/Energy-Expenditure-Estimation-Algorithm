@@ -9,8 +9,6 @@ import clean_data as cleaner
 import test_model as tester 
 import classes as classes
 
-
-
 ##########################  TEST MODEL #####################################
 # Compares the accuracy of the discrete model to the accuracy of other models
 # used in these scripts for estimating EE. Prints results to console
@@ -27,7 +25,6 @@ def compareDiscrete():
         
 ############################################################################## 
     
-
 ##########################  BUCKET METHODS ###################################  
 # builds bucket mapping for the  optimal equation and updates global
 # variables with information about the discrete model
@@ -36,9 +33,7 @@ def buildBucketMapping():
     subjects = cleaner.getSubjects()
     global managers
     managers = cleaner.calculateStats( subjects , False )
-    #Filter out managers not related to height weight age and sex 
-    # this means that only the heigh weight age and sex will be 
-    # considered for buckets 
+    #Filter out manager for TDEE
     managers = list(filter(lambda man:  man.name != "TDEE" , managers) )
     # build buckets to discrete equation form list of errors
     buckets = getBucketDictionary( subjects )
@@ -95,7 +90,6 @@ def buildDiscreteDict(buckets):
             
 ##############################################################################  
     
-    
 ########################### BUILD DISCRETE #################################
 # Finds the optimal equation for a subject based on the bucket that they fall 
 # into. This helper function is used to access the discrete model 
@@ -114,6 +108,15 @@ discreteDict = {}
 buildBucketMapping()
 ##############################################################################
 
+########################### SUGGESTION #######################################
+
+def recommendSurplus(subject, tdee):
+    return 0 #temp
+
+def recommendDeficit(subject, tdee):
+    return 0 #temp 
+
+##############################################################################
 
 #############################   MAIN     #####################################    
 # Uses results form building initial model and errors from comparing to 
