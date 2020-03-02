@@ -8,6 +8,7 @@ Created on Wed Feb 26 14:14:45 2020
 import clean_data as cleaner 
 import test_model as tester 
 import classes as classes
+import helper as helper
 
 ##########################  TEST MODEL #####################################
 # Compares the accuracy of the discrete model to the accuracy of other models
@@ -83,9 +84,11 @@ def buildDiscreteDict(buckets):
         subjectsInBucket = buckets[bucketKey]
         subjResults = tester.buildEnergyExpenditureResults(subjectsInBucket)
         errors = tester.testAndCompareModels(subjResults)
-        discreteName = min(errors, key=lambda err: err.getRMSE()).techniqueName
+        minErrorManager =  min(errors, key=lambda err: err.getRMSE())
+        discreteName = minErrorManager.techniqueName
+        minRMSE = minErrorManager.getRMSE()
         #mapping from bucket -> discrete eq
-        discreteDict[bucketKey] =  discreteName
+        discreteDict[bucketKey] =  (discreteName,minRMSE)
     return discreteDict
             
 ##############################################################################  
@@ -95,7 +98,7 @@ def buildDiscreteDict(buckets):
 # into. This helper function is used to access the discrete model 
 def getOptimalForDiscrete( subject ):
    bucketKey = buildBucketKey(subject)
-   optimalEquation = discreteDict[bucketKey]
+   optimalEquation = discreteDict[bucketKey][0]
    result = classes.SubjectEnergyResults(subject)
    estimate = getattr( result , optimalEquation )
    return estimate
@@ -110,9 +113,15 @@ buildBucketMapping()
 
 ########################### SUGGESTION #######################################
 
+# returns a tuple where the first item in the tuple is the 
+# start of reccomended surplus and second item is the end 
+# of the reccommended range 
 def recommendSurplus(subject, tdee):
-    return 0 #temp
+    return  #temp
 
+# returns a tuple where the first item in the tuple is the 
+# start of reccomended deficit and second item is the end 
+# of the reccommended range
 def recommendDeficit(subject, tdee):
     return 0 #temp 
 
@@ -136,7 +145,8 @@ def main():
             bucketCount = 1
             for bucket,equation in discreteDict.items():
                 print( "#" + str(bucketCount) + " " + bucket +"\n")
-                print("\t"+equation+"\n")
+                print("\t"+equation[0]+" --> \t"+
+                      helper.strRound(equation[1],2)+"\n")
                 bucketCount+=1  
         # utility   
         elif userInput == "/quit":
