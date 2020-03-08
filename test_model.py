@@ -63,7 +63,7 @@ def exportResultsAndErrors( energyResultsList ):
                        "owen","owenError",      
                        "mifflinStJeor","mifflinStJeorError",
                        "logSmarter","logSmarterError",
-                       "optimal","optimalError",
+                       "discrete","discreteError",
                        "Sex","Age","HeightInches","WeightPounds",
                        "bmi", "activityLevel"]
     

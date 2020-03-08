@@ -84,11 +84,11 @@ def buildDiscreteDict(buckets):
         subjectsInBucket = buckets[bucketKey]
         subjResults = tester.buildEnergyExpenditureResults(subjectsInBucket)
         errors = tester.testAndCompareModels(subjResults)
-        minErrorManager =  min(errors, key=lambda err: err.getRMSE())
+        minErrorManager =  min(errors, key=lambda err: err.getMAE())
         discreteName = minErrorManager.techniqueName
-        minRMSE = minErrorManager.getRMSE()
+        minMAE = minErrorManager.getMAE()
         #mapping from bucket -> discrete eq
-        discreteDict[bucketKey] =  (discreteName,minRMSE)
+        discreteDict[bucketKey] =  (discreteName,minMAE)
     return discreteDict
             
 ##############################################################################  
@@ -145,7 +145,7 @@ def main():
             bucketCount = 1
             for bucket,equation in discreteDict.items():
                 print( "#" + str(bucketCount) + " " + bucket +"\n")
-                print("\t"+equation[0]+" --> \t"+
+                print("\tEq: "+equation[0]+"\t\t Err: "+
                       helper.strRound(equation[1],2)+"\n")
                 bucketCount+=1  
         # utility   
