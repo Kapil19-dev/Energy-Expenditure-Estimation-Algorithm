@@ -4,7 +4,6 @@ Ryan Lefebvre 1/26/2020
 """
 import matplotlib.pyplot as plt  
 from matplotlib.pyplot import pause
-from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 import seaborn as seabornInstance
 import clean_data as cleaner 
@@ -27,19 +26,11 @@ def buildModel():
     # and response 
     y = rawData['TDEE'] # rawData[['TDEE']]
     #split data into train and test
-    regressor = RandomForestRegressor(n_estimators=200, random_state=0) #LinearRegression()
-    print( x )
+    regressor = RandomForestRegressor(n_estimators=200, random_state=0) 
     #Regr coefficients
     regressor.fit(x, y.ravel())
     #predictions = regressor.predict(x)
     return regressor
-
-#Helper for getting gender coef for LgoSmarter model
-def getGenderCoef(isMale):
-    if( isMale == True ):
-        return maleGenderCoef
-    else:
-        return femaleGenderCoef
 
 # returns an estimated TDEE using the LogSmarter model 
 def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
@@ -48,14 +39,6 @@ def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
                    ageYears, heightInches, weightPounds, palMult ]]
     estimate = regressor.predict(subjectData)[0]
     return estimate
-    #return regressor.predict
-            #round( 
-            #( intercept ) +
-            #( ageYears * ageCoef ) +
-            #( heightInches * heightCoef ) +
-            #( weightPounds * weightCoef ) +
-            #( palMult * palCoef ) + 
-            #( getGenderCoef(isMale) ),2)
 
 #Helper method for estimate that takes a subject as a param. Used as param for
 # creating subject energy results class instances so they know how to calc LS 
@@ -66,24 +49,6 @@ def getLogSmarter(subject):
                      subject.age,
                      subject.isMale(),
                      subject.getActivityMultiplier())
-
-#Prints LogSmarter model to the console in readable format
-def getLogSmarterModel():
-    print("\n\t\tTDEE(M) = "
-          "\n\t\t       (" + str(round(intercept +
-                                       maleGenderCoef,2)) + ")          +"
-          "\n\t\t       (" + str(round(ageCoef,2)) + "   * AGE)    +"
-          "\n\t\t       (" + str(round(heightCoef,2)) + "   * HEIGHT) +"
-          "\n\t\t       (" + str(round(weightCoef,2)) + "    * WEIGHT) +"
-          "\n\t\t       (" + str(round(palCoef,2)) + " * PALCAT)" )
-    
-    print("\n\t\tTDEE(F) = " 
-          "\n\t\t       (" + str(round(intercept +
-                                       femaleGenderCoef,2)) + ")         +" 
-          "\n\t\t       (" + str(round(ageCoef,2)) + "   * AGE)    +"
-          "\n\t\t       (" + str(round(heightCoef,2)) + "   * HEIGHT) +"
-          "\n\t\t       (" + str(round(weightCoef,2)) + "    * WEIGHT) +"
-          "\n\t\t       (" + str(round(palCoef,2)) + " * PALCAT)")
 
 #displays historgram of TDEE distribution 
 def checkDistribution(rawData):
@@ -102,15 +67,6 @@ def anacondaDisplayPlot():
 # making the regressor gloabl improves run time because this way model is only 
 # built one time during the execution of the script
 regressor = buildModel()
-#intercept =  (regressor.intercept_)[0] 
-#maleGenderCoef = ((regressor.coef_)[0][0])*2
-#femaleGenderCoef = (regressor.coef_)[0][0]
-#coefs = (regressor.coef_)[0]
-#ageCoef = coefs[1]
-#heightCoef = coefs[2]
-#weightCoef = coefs[3]
-#palCoef = coefs[4]
-#Update get LogSmarter in equations.py
 equations.getLogSmarter = getLogSmarter
 ##############################################################################
         
@@ -128,7 +84,8 @@ def main():
         # Plots
         elif userInput == "/model":
             print("\tLogSmarter TDEE Estimation Model:  ")
-            print( estimate( 69 , 190, 20 , True, 1.725 ) ) 
+            print("\t\t:estimate( 69 , 190, 20 , True, 1.725 ) = " + 
+                   str( estimate( 69 , 190, 20 , True, 1.725 ))) 
            # getLogSmarterModel()
         elif userInput == "/dist":
             print("\tHistogram of TDEE Distribution:  ")
