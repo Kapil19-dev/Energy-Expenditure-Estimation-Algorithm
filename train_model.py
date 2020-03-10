@@ -24,17 +24,15 @@ def buildModel():
     #need to deal with catagorical variables         
     x = rawData[['SEX','AGE','HEIGHT','WEIGHT',"PALCAT"]] 
     # and response 
-    y = rawData['TDEE'] # rawData[['TDEE']]
+    y = rawData['TDEE'] 
     #split data into train and test
     regressor = RandomForestRegressor(n_estimators=200, random_state=0) 
     #Regr coefficients
     regressor.fit(x, y.ravel())
-    #predictions = regressor.predict(x)
     return regressor
 
 # returns an estimated TDEE using the LogSmarter model 
 def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
-    #prediction = regressor.predict([])
     subjectData = [[helpers.genderAsNumeric( helpers.getGenderString(isMale) ),
                    ageYears, heightInches, weightPounds, palMult ]]
     estimate = regressor.predict(subjectData)[0]
