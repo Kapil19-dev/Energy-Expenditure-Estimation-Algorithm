@@ -9,6 +9,7 @@ import seaborn as seabornInstance
 import clean_data as cleaner 
 import equations as equations
 import helper as helpers
+import _pickle 
 
 
 # Builds the model and returns a trained linear regression object 
@@ -33,6 +34,8 @@ def buildModel():
 
 # returns an estimated TDEE using the LogSmarter model 
 def estimate(heightInches, weightPounds, ageYears, isMale, palMult ):
+    print( str(helpers.genderAsNumeric( helpers.getGenderString(isMale) ) ))
+    print( str(palMult))
     subjectData = [[helpers.genderAsNumeric( helpers.getGenderString(isMale) ),
                    ageYears, heightInches, weightPounds, palMult ]]
     estimate = regressor.predict(subjectData)[0]
@@ -61,11 +64,23 @@ def checkDistribution(rawData):
 def anacondaDisplayPlot():
     pause(1)
     
+
+# loads the model from the pickled file to avoid re training
+def loadPickledModel():    
+    with open("data/model.pkl",'rb') as file:
+        return _pickle.load(file)
+
+# uses pickle to export the model to a file 
+def exportModel():
+    with open("data/model.pkl",'wb') as file:
+        _pickle.dump(regressor,file)
+
 ########################## GLOBAL REGRESSOR ##################################
 # making the regressor gloabl improves run time because this way model is only 
 # built one time during the execution of the script
-regressor = buildModel()
+regressor = loadPickledModel()
 equations.getLogSmarter = getLogSmarter
+
 ##############################################################################
         
 #############################   MAIN     #####################################
@@ -75,16 +90,19 @@ def main():
     while( True ):
         userInput = input("(Train-Model)> ").lower().strip()
         if userInput == '/help':
-            print("\n\t/model   \t=>\tLogSmarter's estimation model"
+            print("\n\t/model   \t=>\tLogSmarter's estimation model",
+                  "\n\t/export   \t=>\tDump RFR model with pickle",
                   "\n\t/dist    \t=>\tHistogram of observed TDEE"
                   "\n\t/optimal \t=>\tMaps buckets -> equations"
                   "\n\t/quit    \t=>\tEnd script" )
         # Plots
         elif userInput == "/model":
             print("\tLogSmarter TDEE Estimation Model:  ")
-            print("\t\t:estimate( 69 , 190, 20 , True, 1.725 ) = " + 
-                   str( estimate( 69 , 190, 20 , True, 1.725 ))) 
-           # getLogSmarterModel()
+            print("\t\t:estimate( 69, 190, 20, True, 1.725 ) = " + 
+                   str( estimate( 69, 190, 20, True, 1.725 ))) 
+        elif userInput == "/export":
+            print("\tDumping model with pickle  ")
+            exportModel()
         elif userInput == "/dist":
             print("\tHistogram of TDEE Distribution:  ")
             checkDistribution(rawData)
